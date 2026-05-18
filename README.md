@@ -105,15 +105,15 @@ telize -f examples/hello_agent.yaml
 ## How it works
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
-│  workflow   │────▶│  load +      │────▶│  WorkflowRunner │
-│  .yaml      │     │  validate    │     │  (entrypoint)   │
-└─────────────┘     └──────────────┘     └────────┬────────┘
-                                                  │
-                     ┌────────────────────────────┼────────────────────────────┐
-                     ▼                            ▼                            ▼
-                   steps                      loops                       sub-flow
-              (step → step)            (split & iterate)              (uses: flow)
+┌─────────────┐      ┌──────────────┐     ┌─────────────────┐
+│  workflow   │─────>│  load +      │────>│  WorkflowRunner │
+│  .yaml      │      │  validate    │     │  (entrypoint)   │
+└─────────────┘      └──────────────┘     └────────┬────────┘
+                                                   │
+                     ┌─────────────────────────────┼────────────────────────────┐
+                     ▼                             ▼                            ▼
+                   steps                         loops                       sub-flow
+              (step → step)                (split & iterate)               (uses: flow)
 ```
 
 1. Telize loads your YAML and validates it against typed models.
