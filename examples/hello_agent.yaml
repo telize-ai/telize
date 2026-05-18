@@ -78,9 +78,7 @@ flows:
         run: |
           echo "Starting build check..."
           python --version
-          echo "Environment OK."
-        envs:
-          OPENAI_API_KEY: "{{ env.OPENAI_API_KEY }}"
+          echo "Environment OK."        
 
       # SCENARIO 8: Processing structural text through a python runner
       - name: analyze_sentiment
