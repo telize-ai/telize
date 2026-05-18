@@ -9,5 +9,5 @@ flows:
         uses: shell
         run: echo "hello telize"
       - name: echo_greet
-        uses: llm
+        uses: shell
         prompt: "Repeat back: {{ steps.greet.output }}"
