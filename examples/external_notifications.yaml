@@ -1,0 +1,11 @@
+config:
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: format_notification
+        uses: shell
+        run: |
+          echo "channel=#product-releases"
+          echo "message={{ input.copy }}"

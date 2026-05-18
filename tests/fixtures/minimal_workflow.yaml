@@ -1,0 +1,13 @@
+config:
+  model: test/model
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: greet
+        uses: shell
+        run: echo "hello telize"
+      - name: echo_greet
+        uses: llm
+        prompt: "Repeat back: {{ steps.greet.output }}"

@@ -1,0 +1,11 @@
+config:
+  entrypoint: main
+flows:
+  main:
+    steps:
+      - name: a
+        uses: shell
+        run: echo a
+      - name: a
+        uses: shell
+        run: echo b

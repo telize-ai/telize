@@ -1,0 +1,122 @@
+# ==============================================================================
+# BLUE PONY SOFTWARE — AGENT FRAMEWORK SPECIFICATION
+# Scenario: Automated Product Release & Marketing Campaign Generator
+# ==============================================================================
+
+config:
+  model: qwen3.5:4b
+  temperature: 0.7
+  api_base_url: http://localhost:11434
+  # Global setting tells the parser which workflow kicks off first
+  entrypoint: release_pipeline
+  system_prompt: You are a helpful assistant.
+
+flows:
+  # ----------------------------------------------------------------------------
+  # MAIN FLOW
+  # ----------------------------------------------------------------------------
+  release_pipeline:
+    steps:
+      # SCENARIO 1: Single file ingestion
+      - name: read_changelog
+        uses: input
+        file: ./docs/raw_changelog.md
+
+      # SCENARIO 2: Directory aggregation into a structured text blob
+      - name: fetch_context_docs
+        uses: input
+        directory:
+          path: ./docs_drafts
+          include: "*.md"
+
+      # SCENARIO 3: LLM generation referencing multiple previous outputs
+      - name: generate_audit_report
+        uses: llm
+        prompt: |
+          You are a technical editor. Review the draft documentation and find any 
+          missing information compared to the master changelog.
+
+          Master Changelog:
+          {{ steps.read_changelog.output }}
+
+          Draft Documents Content:
+          {{ steps.fetch_context_docs.output }}
+        # Automatically flushes the raw string output to disk upon step completion
+        output_to: ./reports/documentation_gap_analysis.md
+
+      # SCENARIO 4: Basic inline LLM execution saving directly to file
+      - name: generate_marketing_copy
+        uses: llm
+        prompt: |
+          Based on this gap analysis, write a high-energy product launch email 
+          announcing the new features for Blue Pony Software:
+          {{ steps.generate_audit_report.output }}
+        output_to: ./outputs/launch_email.txt
+
+      # SCENARIO 5: Generating data structures packed inside a plain text block
+      - name: get_keywords
+        uses: llm
+        prompt: |
+          Review this text and output exactly 3 key themes as a comma-separated list.
+          Do not include markdown or formatting, just words separated by commas.
+          
+          Text: {{ steps.generate_marketing_copy.output }}
+
+      # SCENARIO 6: Native string-splitting / Map-Reduce iteration
+      - name: generate_hashtags
+        uses: llm
+        loop:
+          items: "{{ steps.get_keywords.output }}"
+          split_by: ","
+          execution: sequential  # Iterates through items one-by-one
+        prompt: |
+          Create 2 creative social media hashtags for this specific topic: {{ item }}
+
+      # SCENARIO 7: Local infrastructure execution (Environment & State tracking)
+      - name: run_system_checks
+        uses: shell
+        run: |
+          echo "Starting build check..."
+          python --version
+          echo "Environment OK."
+        envs:
+          OPENAI_API_KEY: "{{ env.OPENAI_API_KEY }}"
+
+      # SCENARIO 8: Processing structural text through a python runner
+      - name: analyze_sentiment
+        uses: python
+        call: my_company.analytics.metrics.evaluate_tone
+        args:
+          text: "{{ steps.generate_marketing_copy.output }}"
+          logs: "{{ steps.run_system_checks.output }}"
+
+      # SCENARIO 9: Calling a subflow defined elsewhere in this document
+      - name: run_analysis_subflow
+        uses: flow
+        run: risk_assessment_swarm
+
+      # SCENARIO 10: Run an external workflow with parent-provided input
+      - name: load_external_notifications
+        uses: yaml
+        file: external_notifications.yaml
+        input:
+          copy: "{{ steps.generate_marketing_copy.output }}"
+
+  # ----------------------------------------------------------------------------
+  # SUB-FLOW: Multi-agent risk assessment
+  # ----------------------------------------------------------------------------
+  risk_assessment_swarm:
+    steps:
+      - name: legal_agent
+        uses: llm
+        prompt: |
+          Analyze this text for any potential legal compliance or compliance risks 
+          for a software product launch:
+          {{ steps.analyze_sentiment.output }}
+
+      - name: competitive_agent
+        uses: llm
+        prompt: |
+          Analyze this copy from a competitor intelligence standpoint. What details 
+          stand out as clear market advantages?
+          {{ steps.analyze_sentiment.output }}

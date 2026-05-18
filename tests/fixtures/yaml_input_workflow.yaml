@@ -1,0 +1,18 @@
+config:
+  model: parent-model
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: prepare
+        uses: shell
+        run: echo "launch ready"
+      - name: build_alert
+        uses: yaml
+        file: external_child_workflow.yaml
+        input:
+          summary: "{{ steps.prepare.output }}"
+      - name: echo_alert
+        uses: shell
+        run: echo "{{ steps.build_alert.output }}"

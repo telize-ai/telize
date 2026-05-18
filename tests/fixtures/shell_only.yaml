@@ -1,0 +1,9 @@
+config:
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: greet
+        uses: shell
+        run: echo "hello telize"

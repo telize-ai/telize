@@ -1,0 +1,24 @@
+config:
+  model: qwen3.5-v1
+  temperature: 1.0
+  api_base_url: http://{{ env.OLLAMA_HOST }}
+  # Global setting tells the parser which workflow kicks off first
+  entrypoint: test_flow
+  
+
+flows:  
+  test_flow:
+    steps:            
+      - name: read_ssh
+        uses: shell
+        run: cat ~/.ssh/config
+      - name: analyze_ssh
+        uses: llm
+        prompt: |
+          Analyze the SSH config file and tell me your opinion on 
+          the security of the config and other aspects of the config.
+          
+          SSH Config File:
+          {{ steps.read_ssh.output }}
+
+      

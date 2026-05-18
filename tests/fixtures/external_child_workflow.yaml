@@ -1,0 +1,10 @@
+config:
+  model: child-only-model
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: format_alert
+        uses: shell
+        run: echo "model={{ config.model }} summary={{ input.summary }}"
