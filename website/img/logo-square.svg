@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Telize">
+  <defs>
+    <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="#07080d"/>
+
+  <!-- Site logo mark, centered -->
+  <g transform="translate(144 144) scale(8)">
+    <rect width="28" height="28" rx="6" fill="url(#brand)"/>
+    <polygon points="9,6 23,14 9,22" fill="#07080d"/>
+  </g>
+</svg>

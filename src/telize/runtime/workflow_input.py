@@ -31,7 +31,10 @@ def load_input_mapping(raw: Any, *, source: str) -> dict[str, Any]:
     if raw is None:
         return {}
     if not isinstance(raw, dict):
-        raise ConfigError(f"Workflow input from {source} must be a mapping, got {type(raw).__name__}")
+        raise ConfigError(
+            f"Workflow input from {source} must be a mapping, "
+            f"got {type(raw).__name__}"
+        )
     return dict(raw)
 
 
@@ -41,10 +44,7 @@ def load_input_file(path: Path) -> dict[str, Any]:
     text = path.read_text(encoding="utf-8")
     suffix = path.suffix.lower()
     try:
-        if suffix == ".json":
-            raw = json.loads(text)
-        else:
-            raw = yaml.safe_load(text)
+        raw = json.loads(text) if suffix == ".json" else yaml.safe_load(text)
     except (json.JSONDecodeError, yaml.YAMLError) as exc:
         raise ConfigError(f"Invalid workflow input in {path}: {exc}") from exc
     return load_input_mapping(raw, source=str(path))
