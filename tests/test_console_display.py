@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import re
 from io import StringIO
 from pathlib import Path
 
+import pytest
 from rich.console import Console
 
 from telize.config import load_spec
@@ -13,13 +15,27 @@ from telize.runtime.state import ExecutionState, StepResult
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 
-def test_print_workflow_results_renders(capsys: object) -> None:
+
+def _plain_console_output(buffer: StringIO) -> str:
+    return _ANSI_ESCAPE.sub("", buffer.getvalue())
+
+
+@pytest.fixture
+def console_buffer():
     import telize.console.display as display
 
     buffer = StringIO()
+    previous = display._CONSOLE
     display._CONSOLE = Console(file=buffer, width=120, force_terminal=True)
+    try:
+        yield buffer
+    finally:
+        display._CONSOLE = previous
 
+
+def test_print_workflow_results_renders(console_buffer: StringIO) -> None:
     state = ExecutionState(
         config=GlobalConfig(entrypoint="main", model="test"),
         base_path=Path("."),
@@ -45,28 +61,21 @@ def test_print_workflow_results_renders(capsys: object) -> None:
     spec = load_spec(path)
     print_workflow_results(spec, path, state, entrypoint="main", elapsed=1.5)
 
-    out = buffer.getvalue()
+    out = _plain_console_output(console_buffer)
     assert "Telize" in out
     assert "greet" in out
     assert "think" in out
     assert "hello world" in out
     assert "Analysis" in out
 
-    display._CONSOLE = None
 
-
-def test_print_validation_ok(capsys: object) -> None:
-    import telize.console.display as display
-
-    buffer = StringIO()
-    display._CONSOLE = Console(file=buffer, width=100, force_terminal=True)
+def test_print_validation_ok(console_buffer: StringIO) -> None:
     print_validation_ok(
         workflow_file=Path("test.yaml"),
         entrypoint="main",
         step_count=3,
     )
-    assert "Valid workflow" in buffer.getvalue()
-    display._CONSOLE = None
+    assert "Valid workflow" in _plain_console_output(console_buffer)
 
 
 def test_runner_populates_uses_metadata() -> None:

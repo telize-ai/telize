@@ -167,7 +167,7 @@ def _render_step_body(output: str, uses: str) -> Markdown | Syntax | Text:
         return Text("")
 
     if uses == "shell":
-        return Syntax(text, "bash", theme="monokai", word_wrap=True)
+        return Text(text)
     if uses == "yaml":
         return Syntax(text, "yaml", theme="monokai", word_wrap=True)
     if uses == "python":
