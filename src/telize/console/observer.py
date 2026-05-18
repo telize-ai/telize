@@ -23,6 +23,7 @@ class RichConsoleObserver:
         self._completed = 0
         self._step_indices: dict[str, int] = {}
         self._status: Status | None = None
+
     def on_workflow_start(self, entrypoint: str, *, estimated_steps: int) -> None:
         self._estimated = max(estimated_steps, 1)
         self._started = time.monotonic()

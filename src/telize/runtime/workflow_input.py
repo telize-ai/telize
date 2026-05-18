@@ -32,8 +32,7 @@ def load_input_mapping(raw: Any, *, source: str) -> dict[str, Any]:
         return {}
     if not isinstance(raw, dict):
         raise ConfigError(
-            f"Workflow input from {source} must be a mapping, "
-            f"got {type(raw).__name__}"
+            f"Workflow input from {source} must be a mapping, got {type(raw).__name__}"
         )
     return dict(raw)
 

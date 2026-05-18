@@ -44,8 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="KEY=VALUE",
         dest="input_pairs",
         help=(
-            "Workflow input as key=value (repeatable). "
-            "Merged with --input-file and --input-stdin."
+            "Workflow input as key=value (repeatable). Merged with --input-file and --input-stdin."
         ),
     )
     parser.add_argument(
