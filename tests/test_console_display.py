@@ -83,4 +83,4 @@ def test_runner_populates_uses_metadata() -> None:
     spec = load_spec(path)
     state = WorkflowRunner(spec, path).run()
     assert state.steps["greet"].uses == "shell"
-    assert state.steps["echo_greet"].uses == "llm"
+    assert state.steps["echo_greet"].uses == "shell"

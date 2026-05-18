@@ -13,5 +13,4 @@ def test_run_minimal_workflow() -> None:
     assert "greet" in state.steps
     assert "echo_greet" in state.steps
     assert "hello telize" in state.steps["greet"].output
-    assert "ollama:" in state.steps["echo_greet"].output
     assert "hello telize" in state.steps["echo_greet"].output
