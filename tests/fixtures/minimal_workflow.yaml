@@ -10,4 +10,4 @@ flows:
         run: echo "hello telize"
       - name: echo_greet
         uses: shell
-        prompt: "Repeat back: {{ steps.greet.output }}"
+        run: echo "{{ steps.greet.output }}"
