@@ -50,7 +50,6 @@ jobs:
       - uses: astral-sh/setup-uv@v5
 
       - run: uv sync --all-groups
-      - run: uv pip install -e .
-      - run: telize --version
-      - run: telize -f examples/hello_agent.yaml --validate-only
-      - run: telize -f tests/fixtures/minimal_workflow.yaml
+      - run: uv run telize --version
+      - run: uv run telize -f examples/hello_agent.yaml --validate-only
+      - run: uv run telize -f tests/fixtures/minimal_workflow.yaml
