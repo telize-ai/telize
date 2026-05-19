@@ -16,7 +16,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick start](#quick-start)
-- [Motivation](#motivation)
+- [Motivation](#-motivation)
 - [How it works](#how-it-works)
 - [Workflow reference](#workflow-reference)
 - [Examples](#examples)
