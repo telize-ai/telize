@@ -58,8 +58,7 @@ def print_validation_ok(
 def print_workflow_header(
     spec_path: Path,
     entrypoint: str,
-    model: str | None,
-    api_base_url: str,
+    model_names: tuple[str, ...],
     *,
     estimated_steps: int,
 ) -> None:
@@ -69,9 +68,8 @@ def print_workflow_header(
     table.add_column()
     table.add_row("Workflow", f"[bold]{spec_path.name}[/]")
     table.add_row("Entrypoint", f"[cyan]{entrypoint}[/]")
-    if model:
-        table.add_row("Model", model)
-    table.add_row("Ollama", api_base_url)
+    if model_names:
+        table.add_row("Models", ", ".join(model_names))
     table.add_row("Steps", str(estimated_steps))
     console.print()
     console.print(
@@ -99,13 +97,10 @@ def print_workflow_results(
 ) -> None:
     """Print all step results at once (used in tests and replay tooling)."""
     console = get_console()
-    cfg = spec.config
-
     print_workflow_header(
         spec_path,
         entrypoint,
-        cfg.model,
-        cfg.api_base_url,
+        tuple(sorted(spec.models)),
         estimated_steps=len(state.steps),
     )
 

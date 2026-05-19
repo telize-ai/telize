@@ -1,0 +1,33 @@
+# Run a separate workflow file with uses: yaml.
+#
+# The child file is nested_workflow_child.yaml. Parent values are passed via
+# input: and appear in the child as {{ input.<key> }}.
+#
+# Run:
+#   telize -f examples/nested_workflow.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      - name: draft_message
+        uses: shell
+        run: echo "Telize 0.2 is ready to ship."
+
+      - name: build_notification
+        uses: yaml
+        file: nested_workflow_child.yaml
+        input:
+          copy: "{{ steps.draft_message.output }}"
+
+      - name: show_result
+        uses: shell
+        run: echo "{{ steps.build_notification.output }}"

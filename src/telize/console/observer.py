@@ -30,8 +30,7 @@ class RichConsoleObserver:
         print_workflow_header(
             self._spec_path,
             entrypoint,
-            self._spec.config.model,
-            self._spec.config.api_base_url,
+            tuple(sorted(self._spec.models)),
             estimated_steps=estimated_steps,
         )
 

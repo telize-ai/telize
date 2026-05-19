@@ -1,0 +1,1 @@
+Telize connects shell commands, file I/O, and LLM steps in one YAML workflow.

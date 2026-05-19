@@ -49,6 +49,7 @@ class WorkflowRunner:
         self._observer.on_workflow_start(entrypoint, estimated_steps=estimated)
         state = ExecutionState(
             config=self._spec.config,
+            models=dict(self._spec.models),
             base_path=self._base_path,
             workflow_input=dict(self._workflow_input),
         )

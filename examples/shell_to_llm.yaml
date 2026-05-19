@@ -1,0 +1,31 @@
+# Chain a shell step into an LLM step with Jinja templates.
+#
+# The shell stdout is available as {{ steps.<step_name>.output }}.
+#
+# Run:
+#   telize -f examples/shell_to_llm.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      - name: fetch_facts
+        uses: shell
+        run: |
+          echo "Telize workflows are defined in YAML."
+          echo "Steps can call shell, Python, LLMs, and nested flows."
+
+      - name: summarize
+        uses: llm
+        model: default
+        prompt: |
+          Summarize these bullet points in two sentences:
+          {{ steps.fetch_facts.output }}

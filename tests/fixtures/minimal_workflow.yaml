@@ -1,5 +1,4 @@
 config:
-  model: test/model
   entrypoint: main
 
 flows:

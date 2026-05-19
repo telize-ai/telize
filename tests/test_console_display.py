@@ -37,7 +37,7 @@ def console_buffer():
 
 def test_print_workflow_results_renders(console_buffer: StringIO) -> None:
     state = ExecutionState(
-        config=GlobalConfig(entrypoint="main", model="test"),
+        config=GlobalConfig(entrypoint="main"),
         base_path=Path("."),
     )
     state.set_step(

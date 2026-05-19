@@ -1,6 +1,11 @@
 config:
-  model: parent-model
   entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: parent-model
+    api_url: http://localhost:11434
 
 flows:
   main:

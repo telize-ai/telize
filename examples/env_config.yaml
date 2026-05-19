@@ -1,0 +1,23 @@
+# Load-time configuration with {{ env.VAR }} in the models section.
+#
+# Only templates that reference env.* are expanded when the file is parsed.
+# Runtime templates (steps.*, input.*, item) stay intact until execution.
+#
+# Example:
+#   OLLAMA_HOST=192.168.1.50 telize -f examples/env_config.yaml --validate-only
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://{{ env.OLLAMA_HOST }}:11434
+
+flows:
+  main:
+    steps:
+      - name: ping
+        uses: shell
+        run: echo "api_url resolved at load time"

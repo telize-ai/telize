@@ -1,0 +1,141 @@
+# ==============================================================================
+# Telize workflow specification reference
+# ==============================================================================
+#
+# This file documents every major workflow feature in one place. It is meant
+# to be read alongside the docs and validated with:
+#
+#   telize -f examples/spec_reference.yaml --validate-only
+#
+# For small, runnable recipes see the other files in examples/.
+#
+# Scenario: automated product release notes and launch copy (illustrative paths).
+
+# config — global workflow settings (required)
+config:
+  # entrypoint — name of the flow that runs when you execute this file
+  entrypoint: release_pipeline
+
+# models — named LLM profiles referenced by `model:` on llm steps
+models:
+  default:
+    provider: openai          # registered provider id
+    model: qwen3.5:4b         # model name passed to the provider
+    temperature: 0.7
+    api_url: http://localhost:11434
+    # api_key: "{{ env.OPENAI_API_KEY }}"  # load-time env; omit for local Ollama
+    system_prompt: You are a helpful assistant.
+
+  creative:
+    provider: openai
+    model: gpt-4o-mini
+    temperature: 1.0
+    api_url: http://localhost:11434
+    system_prompt: You are a creative assistant.
+
+flows:
+  # --------------------------------------------------------------------------
+  # Main flow — runs top to bottom; each step name must be unique in the flow
+  # --------------------------------------------------------------------------
+  release_pipeline:
+    steps:
+      # uses: input — read a single file (paths are relative to this YAML file)
+      - name: read_changelog
+        uses: input
+        file: ./docs/raw_changelog.md
+
+      # uses: input — aggregate matching files from a directory
+      - name: fetch_context_docs
+        uses: input
+        directory:
+          path: ./docs_drafts
+          include: "*.md"
+
+      # uses: llm — prompt supports Jinja; reference prior steps via steps.<name>.output
+      - name: generate_audit_report
+        uses: llm
+        model: default
+        prompt: |
+          Review draft documentation against the master changelog.
+
+          Master Changelog:
+          {{ steps.read_changelog.output }}
+
+          Draft Documents:
+          {{ steps.fetch_context_docs.output }}
+        # output_to — optional path; raw LLM text is written when the step finishes
+        output_to: ./reports/documentation_gap_analysis.md
+
+      - name: generate_marketing_copy
+        uses: llm
+        model: creative
+        prompt: |
+          Write a short product launch email based on this analysis:
+          {{ steps.generate_audit_report.output }}
+        output_to: ./outputs/launch_email.txt
+
+      # Prepare comma-separated text for the loop step below
+      - name: get_keywords
+        uses: llm
+        model: default
+        prompt: |
+          Output exactly 3 themes as a comma-separated list (no markdown).
+          Text: {{ steps.generate_marketing_copy.output }}
+
+      # uses: llm + loop — split a prior step's output and run the prompt per item
+      - name: generate_hashtags
+        uses: llm
+        model: creative
+        loop:
+          items: "{{ steps.get_keywords.output }}"
+          split_by: ","
+          execution: sequential   # or parallel
+        prompt: |
+          Create 2 social hashtags for this topic: {{ item }}
+
+      # uses: shell — run commands; stdout becomes steps.<name>.output
+      - name: run_system_checks
+        uses: shell
+        run: |
+          echo "Starting build check..."
+          python --version
+          echo "Environment OK."
+
+      # uses: python — import path to a callable; args may be templated
+      - name: analyze_sentiment
+        uses: python
+        call: my_company.analytics.metrics.evaluate_tone
+        args:
+          text: "{{ steps.generate_marketing_copy.output }}"
+          logs: "{{ steps.run_system_checks.output }}"
+
+      # uses: flow — run another flow defined in this same file (shared step state)
+      - name: run_analysis_subflow
+        uses: flow
+        run: risk_assessment_swarm
+
+      # uses: yaml — run an external workflow; optional input map for {{ input.* }}
+      - name: format_release_notification
+        uses: yaml
+        file: nested_workflow_child.yaml
+        input:
+          copy: "{{ steps.generate_marketing_copy.output }}"
+
+  # --------------------------------------------------------------------------
+  # Sub-flow — invoked via uses: flow; sees parent step outputs in templates
+  # --------------------------------------------------------------------------
+  risk_assessment_swarm:
+    steps:
+      - name: legal_agent
+        uses: llm
+        model: default
+        prompt: |
+          Flag legal or compliance risks in this launch copy:
+          {{ steps.analyze_sentiment.output }}
+
+      - name: competitive_agent
+        uses: llm
+        model: default
+        prompt: |
+          List market advantages implied by this copy:
+          {{ steps.analyze_sentiment.output }}

@@ -1,0 +1,23 @@
+# Call a Python function by import path with uses: python.
+#
+# Replace the call path with your own module before running. This file is
+# mainly useful for --validate-only unless you install the target package.
+#
+# Validate:
+#   telize -f examples/python_step.yaml --validate-only
+
+config:
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: gather_text
+        uses: shell
+        run: echo "Sample text for analysis."
+
+      - name: score_text
+        uses: python
+        call: my_company.analytics.metrics.evaluate_tone
+        args:
+          text: "{{ steps.gather_text.output }}"

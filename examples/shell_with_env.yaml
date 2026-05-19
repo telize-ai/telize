@@ -1,0 +1,18 @@
+# Pass extra environment variables to a shell step with envs:.
+#
+# Values support Jinja; {{ env.* }} is expanded at load time.
+#
+# Run (optional override):
+#   TELIZE_CHANNEL=releases telize -f examples/shell_with_env.yaml
+
+config:
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: announce
+        uses: shell
+        envs:
+          CHANNEL: "{{ env.TELIZE_CHANNEL | default('general') }}"
+        run: echo "Posting to channel=$CHANNEL"

@@ -1,0 +1,21 @@
+# Minimal workflow: one LLM step and a default model profile.
+#
+# Run (requires a local Ollama or OpenAI-compatible endpoint):
+#   telize -f examples/minimal_llm.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      - name: greet
+        uses: llm
+        model: default
+        prompt: Say hello in one friendly sentence.

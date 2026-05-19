@@ -64,6 +64,9 @@ class LlmStep(_StepBase):
     """Call an LLM with a Jinja-templated prompt."""
 
     uses: Literal["llm"] = "llm"
+    model: str = Field(
+        description="Name of a model defined in the top-level `models` mapping.",
+    )
     prompt: str
     output_to: str | None = Field(
         default=None,

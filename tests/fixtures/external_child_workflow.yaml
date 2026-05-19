@@ -1,10 +1,15 @@
 config:
-  model: child-only-model
   entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: child-only-model
+    api_url: http://localhost:11434
 
 flows:
   main:
     steps:
       - name: format_alert
         uses: shell
-        run: echo "model={{ config.model }} summary={{ input.summary }}"
+        run: echo "model={{ models.default.model }} summary={{ input.summary }}"

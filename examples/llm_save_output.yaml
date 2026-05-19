@@ -1,0 +1,22 @@
+# Write LLM output to disk with output_to (path relative to this file).
+#
+# Run:
+#   telize -f examples/llm_save_output.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      - name: draft_readme_blurb
+        uses: llm
+        model: default
+        prompt: Write a one-paragraph README tagline for a YAML workflow runner.
+        output_to: ./data/generated_blurb.txt

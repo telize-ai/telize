@@ -28,11 +28,17 @@ def test_runtime_prompt_unchanged_at_load(tmp_path: Path) -> None:
         dedent("""
             config:
               entrypoint: main
+            models:
+              default:
+                provider: openai
+                model: m
+                api_url: http://localhost:11434
             flows:
               main:
                 steps:
                   - name: a
                     uses: llm
+                    model: default
                     prompt: "Result: {{ steps.other.output }}"
         """),
         encoding="utf-8",
@@ -44,12 +50,12 @@ def test_runtime_prompt_unchanged_at_load(tmp_path: Path) -> None:
 
 def test_render_env_templates_nested() -> None:
     data = {
-        "config": {"api_base_url": "http://{{ env.HOST }}:11434"},
+        "models": {"default": {"api_url": "http://{{ env.HOST }}:11434"}},
         "flows": {"main": {"steps": [{"prompt": "{{ steps.x.output }}"}]}},
     }
     import os
 
     os.environ["HOST"] = "ollama.local"
     rendered = render_env_templates(data)
-    assert rendered["config"]["api_base_url"] == "http://ollama.local:11434"
+    assert rendered["models"]["default"]["api_url"] == "http://ollama.local:11434"
     assert rendered["flows"]["main"]["steps"][0]["prompt"] == "{{ steps.x.output }}"

@@ -1,0 +1,36 @@
+# Invoke another flow in the same file with uses: flow.
+#
+# Sub-flows share step state with the parent, so templates can reference
+# steps that ran before the flow step.
+#
+# Run:
+#   telize -f examples/call_subflow.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      - name: collect_draft
+        uses: shell
+        run: echo "Feature X ships next week."
+
+      - name: polish_copy
+        uses: flow
+        run: polish_flow
+
+  polish_flow:
+    steps:
+      - name: tighten
+        uses: llm
+        model: default
+        prompt: |
+          Rewrite this announcement in one crisp sentence:
+          {{ steps.collect_draft.output }}

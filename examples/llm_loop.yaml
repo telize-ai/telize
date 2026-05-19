@@ -1,0 +1,33 @@
+# Run an LLM step once per item after splitting a prior step's output.
+#
+# Inside the loop prompt, use {{ item }} for the current piece.
+#
+# Run:
+#   telize -f examples/llm_loop.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      # Shell keeps this example self-contained without an extra LLM call
+      - name: topics
+        uses: shell
+        run: echo "automation, agents, yaml"
+
+      - name: tag_each_topic
+        uses: llm
+        model: default
+        loop:
+          items: "{{ steps.topics.output }}"
+          split_by: ","
+          execution: sequential
+        prompt: |
+          Reply with one short hashtag for the topic "{{ item }}" (no explanation).

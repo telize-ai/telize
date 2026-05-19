@@ -1,0 +1,29 @@
+# Read a single file with uses: input, then pass its content to an LLM.
+#
+# Paths are relative to this workflow file (see examples/data/).
+#
+# Run:
+#   telize -f examples/read_file.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      - name: load_source
+        uses: input
+        file: ./data/sample.txt
+
+      - name: explain
+        uses: llm
+        model: default
+        prompt: |
+          In one sentence, what is this text about?
+          {{ steps.load_source.output }}

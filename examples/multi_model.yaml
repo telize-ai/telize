@@ -1,0 +1,37 @@
+# Use multiple named models and pick one per llm step via model:.
+#
+# Run:
+#   telize -f examples/multi_model.yaml
+
+config:
+  entrypoint: main
+
+models:
+  factual:
+    provider: openai
+    model: qwen3.5:4b
+    temperature: 0.2
+    api_url: http://localhost:11434
+    system_prompt: Be concise and factual.
+
+  playful:
+    provider: openai
+    model: qwen3.5:4b
+    temperature: 1.0
+    api_url: http://localhost:11434
+    system_prompt: Be witty but brief.
+
+flows:
+  main:
+    steps:
+      - name: define_term
+        uses: llm
+        model: factual
+        prompt: Define "workflow orchestration" in one sentence.
+
+      - name: rephrase
+        uses: llm
+        model: playful
+        prompt: |
+          Rephrase this definition in a friendlier tone:
+          {{ steps.define_term.output }}

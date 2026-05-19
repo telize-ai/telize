@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 FIXTURES = Path(__file__).parent / "fixtures"
-EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "hello_agent.yaml"
+EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "spec_reference.yaml"
 
 
 def test_validate_example() -> None:

@@ -1,3 +1,8 @@
+# Child workflow for nested_workflow.yaml and spec_reference.yaml
+#
+# Parent workflows pass values via `input:` on the yaml step. Use them as
+# {{ input.<key> }} in this file.
+
 config:
   entrypoint: main
 

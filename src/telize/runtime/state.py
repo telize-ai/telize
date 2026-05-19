@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from telize.config.models import GlobalConfig
+from telize.config.models import GlobalConfig, ModelConfig
 
 
 @dataclass
@@ -24,6 +24,7 @@ class ExecutionState:
 
     config: GlobalConfig
     base_path: Path
+    models: dict[str, ModelConfig] = field(default_factory=dict)
     workflow_input: dict[str, Any] = field(default_factory=dict)
     steps: dict[str, StepResult] = field(default_factory=dict)
 
@@ -49,6 +50,7 @@ class ExecutionState:
         """Copy state for sub-flow execution while preserving parent step outputs."""
         return ExecutionState(
             config=self.config,
+            models=dict(self.models),
             base_path=self.base_path,
             workflow_input=dict(self.workflow_input),
             steps=dict(self.steps),

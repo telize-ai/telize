@@ -1,0 +1,65 @@
+# Fixture for model / system-prompt tests (structure mirrors examples/spec_reference.yaml)
+config:
+  entrypoint: release_pipeline
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    temperature: 0.7
+    api_url: http://localhost:11434
+    system_prompt: You are a helpful assistant.
+
+flows:
+  release_pipeline:
+    steps:
+      - name: read_changelog
+        uses: input
+        file: ./docs/raw_changelog.md
+      - name: fetch_context_docs
+        uses: input
+        directory:
+          path: ./docs_drafts
+          include: "*.md"
+      - name: generate_audit_report
+        uses: llm
+        model: default
+        prompt: Audit docs
+      - name: generate_marketing_copy
+        uses: llm
+        model: default
+        prompt: Write copy
+      - name: get_keywords
+        uses: llm
+        model: default
+        prompt: Keywords
+      - name: generate_hashtags
+        uses: llm
+        model: default
+        loop:
+          items: "{{ steps.get_keywords.output }}"
+          split_by: ","
+        prompt: Hashtags for {{ item }}
+      - name: run_system_checks
+        uses: shell
+        run: echo ok
+      - name: analyze_sentiment
+        uses: python
+        call: my_company.analytics.metrics.evaluate_tone
+      - name: run_analysis_subflow
+        uses: flow
+        run: risk_assessment_swarm
+      - name: format_release_notification
+        uses: yaml
+        file: nested_workflow_child.yaml
+
+  risk_assessment_swarm:
+    steps:
+      - name: legal_agent
+        uses: llm
+        model: default
+        prompt: Legal review
+      - name: competitive_agent
+        uses: llm
+        model: default
+        prompt: Competitive review

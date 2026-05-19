@@ -51,5 +51,8 @@ jobs:
 
       - run: uv sync --all-groups
       - run: uv run telize --version
-      - run: uv run telize -f examples/hello_agent.yaml --validate-only
+      - run: |
+          for f in examples/*.yaml; do
+            uv run telize -f "$f" --validate-only
+          done
       - run: uv run telize -f tests/fixtures/minimal_workflow.yaml

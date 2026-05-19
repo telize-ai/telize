@@ -30,12 +30,12 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - **Loops and sub-flows** — iterate LLM steps over split lists; call nested flows with `uses: flow`
 - **Validated upfront** — Pydantic models catch schema errors before any step runs
 - **Rich CLI output** — progress, step panels, and errors in the terminal
-- **Local LLM ready** — works with [Ollama](https://ollama.com/) out of the box
+- **OpenAI-compatible LLMs** — official OpenAI API or local [Ollama](https://ollama.com/) via the same client
 
 ## Requirements
 
 - **Python 3.12+**
-- **[Ollama](https://ollama.com/)** (or another endpoint compatible with the Ollama API) for `uses: llm` steps — defaults to `http://localhost:11434`
+- **LLM endpoint** for `uses: llm` steps — [OpenAI](https://platform.openai.com/) or [Ollama](https://ollama.com/) (OpenAI-compatible at `http://localhost:11434` by default)
 - Optional: [uv](https://docs.astral.sh/uv/) for fast local development
 
 ## Installation
@@ -61,16 +61,19 @@ telize --version
 
 ## Quick start
 
-**1.** Start Ollama and pull a model (if you use LLM steps):
+**1.** For local models, start [Ollama](https://ollama.com/) and pull a model:
 
 ```bash
 ollama pull qwen3.5:4b   # or any model you set in config
 ```
 
+For OpenAI Cloud, set `OPENAI_API_KEY` and use `api_base_url: https://api.openai.com/v1` (or omit `api_base_url` to use the SDK default).
+
 **2.** Create `hello.yaml`:
 
 ```yaml
 config:
+  provider: openai
   model: qwen3.5:4b
   api_base_url: http://localhost:11434
   entrypoint: main
@@ -98,8 +101,8 @@ telize -f hello.yaml --validate-only
 Run the bundled examples:
 
 ```bash
-telize -f examples/hello_simple.yaml
-telize -f examples/hello_agent.yaml
+telize -f examples/minimal_llm.yaml
+telize -f examples/spec_reference.yaml --validate-only
 ```
 
 ## How it works
@@ -128,7 +131,7 @@ telize -f examples/hello_agent.yaml
 
 | Key | Description |
 |-----|-------------|
-| `config` | Global settings: `entrypoint`, `model`, `temperature`, `api_base_url`, `system_prompt` |
+| `config` | Global settings: `entrypoint`, `provider`, `model`, `temperature`, `api_base_url`, `api_key`, `system_prompt` |
 | `flows` | Named flows; `config.entrypoint` must match one of these keys |
 
 ### Flow
@@ -177,8 +180,19 @@ Example — chain a shell step into an LLM step:
 
 | File | What it demonstrates |
 |------|----------------------|
-| [`examples/hello_simple.yaml`](examples/hello_simple.yaml) | Minimal pipeline: shell → LLM |
-| [`examples/hello_agent.yaml`](examples/hello_agent.yaml) | Full showcase: input, loops, shell, python, and sub-flows |
+| [`examples/spec_reference.yaml`](examples/spec_reference.yaml) | Full specification reference (all step types and fields) |
+| [`examples/minimal_llm.yaml`](examples/minimal_llm.yaml) | Smallest runnable LLM workflow |
+| [`examples/shell_to_llm.yaml`](examples/shell_to_llm.yaml) | Shell → LLM with `{{ steps.*.output }}` |
+| [`examples/read_file.yaml`](examples/read_file.yaml) | `uses: input` — single file |
+| [`examples/read_directory.yaml`](examples/read_directory.yaml) | `uses: input` — directory glob |
+| [`examples/llm_save_output.yaml`](examples/llm_save_output.yaml) | `output_to` — persist LLM text to disk |
+| [`examples/llm_loop.yaml`](examples/llm_loop.yaml) | `loop` — split output and iterate |
+| [`examples/call_subflow.yaml`](examples/call_subflow.yaml) | `uses: flow` — sub-flow in the same file |
+| [`examples/nested_workflow.yaml`](examples/nested_workflow.yaml) | `uses: yaml` — external workflow + `input` |
+| [`examples/python_step.yaml`](examples/python_step.yaml) | `uses: python` — call a Python function |
+| [`examples/multi_model.yaml`](examples/multi_model.yaml) | Multiple named `models` profiles |
+| [`examples/shell_with_env.yaml`](examples/shell_with_env.yaml) | Shell `envs` and load-time `{{ env.* }}` |
+| [`examples/env_config.yaml`](examples/env_config.yaml) | `{{ env.VAR }}` in the `models` section at load time |
 
 ## CLI
 

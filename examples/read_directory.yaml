@@ -1,0 +1,31 @@
+# Read and concatenate files from a directory (glob via include).
+#
+# Each file becomes a markdown section in the combined output.
+#
+# Run:
+#   telize -f examples/read_directory.yaml
+
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
+
+flows:
+  main:
+    steps:
+      - name: load_notes
+        uses: input
+        directory:
+          path: ./data/notes
+          include: "*.md"
+
+      - name: merge_summary
+        uses: llm
+        model: default
+        prompt: |
+          List the titles mentioned in these notes:
+          {{ steps.load_notes.output }}

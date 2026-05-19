@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from telize.config.models import LlmStep, Step
+from telize.config.models import LlmStep, ModelConfig, Step
 from telize.exceptions import ExecutionError
-from telize.providers.ollama import OllamaClient
+from telize.providers import get_llm_client
 from telize.runtime.actions.base import ActionContext, ActionExecutor
 from telize.runtime.context import build_template_context
 from telize.runtime.paths import resolve_under_base
@@ -12,23 +12,35 @@ from telize.runtime.state import StepResult
 from telize.templating.renderer import TemplateRenderer
 
 
-def render_system_prompt(ctx: ActionContext) -> str | None:
-    """Render config.system_prompt with the current execution context."""
-    raw = ctx.state.config.system_prompt
+def resolve_model_config(ctx: ActionContext, step: LlmStep) -> ModelConfig:
+    """Look up the model definition referenced by an llm step."""
+    try:
+        return ctx.state.models[step.model]
+    except KeyError as exc:
+        known = ", ".join(sorted(ctx.state.models)) or "(none)"
+        raise ExecutionError(
+            f"Unknown model {step.model!r}. Defined models: {known}"
+        ) from exc
+
+
+def render_system_prompt(ctx: ActionContext, model_config: ModelConfig) -> str | None:
+    """Render model system_prompt with the current execution context."""
+    raw = model_config.system_prompt
     if not raw:
         return None
     return ctx.renderer.render(raw)
 
 
-def generate_completion(ctx: ActionContext, prompt: str) -> str:
-    """Send a prompt to Ollama using workflow global config."""
-    system = render_system_prompt(ctx)
-    with OllamaClient.from_config(ctx.state.config) as client:
+def generate_completion(ctx: ActionContext, step: LlmStep, prompt: str) -> str:
+    """Send a prompt to the LLM provider configured for the step's model."""
+    model_config = resolve_model_config(ctx, step)
+    system = render_system_prompt(ctx, model_config)
+    with get_llm_client(model_config) as client:
         return client.chat(prompt, system=system)
 
 
 class LlmActionExecutor(ActionExecutor):
-    """LLM steps backed by a local Ollama instance."""
+    """LLM steps backed by a named model from the workflow `models` section."""
 
     uses = "llm"
 
@@ -38,15 +50,16 @@ class LlmActionExecutor(ActionExecutor):
 
         if step.loop is None:
             prompt = ctx.renderer.render(step.prompt)
-            output = generate_completion(ctx, prompt)
+            output = generate_completion(ctx, step, prompt)
             return _finalize(step, output, ctx)
 
         loop = step.loop
+        model_config = resolve_model_config(ctx, step)
+        system = render_system_prompt(ctx, model_config)
         items_raw = ctx.renderer.render(loop.items)
         items = [part.strip() for part in items_raw.split(loop.split_by) if part.strip()]
-        system = render_system_prompt(ctx)
         outputs: list[str] = []
-        with OllamaClient.from_config(ctx.state.config) as client:
+        with get_llm_client(model_config) as client:
             for item in items:
                 loop_ctx = build_template_context(ctx.state, item=item)
                 loop_renderer = TemplateRenderer(loop_ctx)
