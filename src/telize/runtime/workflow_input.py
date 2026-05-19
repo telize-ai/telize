@@ -27,26 +27,46 @@ def parse_key_value_pairs(pairs: list[str] | None) -> dict[str, Any]:
     return result
 
 
-def load_input_mapping(raw: Any, *, source: str) -> dict[str, Any]:
+def normalize_cli_input(raw: Any, *, source: str) -> dict[str, Any]:
+    """Map parsed CLI input to workflow input; plain text becomes ``{\"text\": ...}``."""
     if raw is None:
         return {}
-    if not isinstance(raw, dict):
-        raise ConfigError(
-            f"Workflow input from {source} must be a mapping, got {type(raw).__name__}"
-        )
-    return dict(raw)
+    if isinstance(raw, dict):
+        return dict(raw)
+    if isinstance(raw, str):
+        return {"text": raw}
+    if isinstance(raw, (bool, int, float)):
+        return {"text": str(raw)}
+    raise ConfigError(
+        f"Workflow input from {source} must be a mapping or plain text, "
+        f"got {type(raw).__name__}"
+    )
+
+
+def load_input_from_text(text: str, *, source: str, parse_json: bool = False) -> dict[str, Any]:
+    if not text.strip():
+        return {}
+    if parse_json:
+        try:
+            raw = json.loads(text)
+        except json.JSONDecodeError:
+            return {"text": text}
+        return normalize_cli_input(raw, source=source)
+    try:
+        raw = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return {"text": text}
+    return normalize_cli_input(raw, source=source)
 
 
 def load_input_file(path: Path) -> dict[str, Any]:
     if not path.is_file():
         raise ConfigError(f"Input file not found: {path}")
     text = path.read_text(encoding="utf-8")
-    suffix = path.suffix.lower()
-    try:
-        raw = json.loads(text) if suffix == ".json" else yaml.safe_load(text)
-    except (json.JSONDecodeError, yaml.YAMLError) as exc:
-        raise ConfigError(f"Invalid workflow input in {path}: {exc}") from exc
-    return load_input_mapping(raw, source=str(path))
+    source = str(path)
+    if path.suffix.lower() == ".txt":
+        return {"text": text}
+    return load_input_from_text(text, source=source, parse_json=path.suffix.lower() == ".json")
 
 
 def load_input_stdin() -> dict[str, Any]:
@@ -55,9 +75,9 @@ def load_input_stdin() -> dict[str, Any]:
         return {}
     try:
         raw = yaml.safe_load(text)
-    except yaml.YAMLError as exc:
-        raise ConfigError(f"Invalid workflow input on stdin: {exc}") from exc
-    return load_input_mapping(raw, source="stdin")
+    except yaml.YAMLError:
+        return {"text": text.rstrip("\n")}
+    return normalize_cli_input(raw, source="stdin")
 
 
 def merge_workflow_input(

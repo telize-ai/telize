@@ -51,12 +51,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--input-file",
         type=Path,
         metavar="FILE",
-        help="YAML or JSON file with workflow input (mapping at root).",
+        help=(
+            "Workflow input file: YAML/JSON mapping, a .txt file (as {{ input.text }}), "
+            "or other text parsed like --input-stdin."
+        ),
     )
     parser.add_argument(
         "--input-stdin",
         action="store_true",
-        help="Read workflow input as YAML or JSON from stdin.",
+        help=(
+            "Read workflow input from stdin: a YAML/JSON mapping, or plain text "
+            "(exposed as {{ input.text }})."
+        ),
     )
     return parser
 

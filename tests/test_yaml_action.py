@@ -68,6 +68,33 @@ def test_cli_workflow_input_file(tmp_path: Path) -> None:
     assert "hello from-file" in result.stdout
 
 
+def test_cli_workflow_input_file_plain_text(tmp_path: Path) -> None:
+    workflow = tmp_path / "stdin_text.yaml"
+    workflow.write_text(
+        "config:\n  entrypoint: main\nflows:\n  main:\n    steps:\n"
+        "      - name: greet\n        uses: shell\n"
+        '        run: echo "prompt={{ input.text }}"\n',
+        encoding="utf-8",
+    )
+    input_file = tmp_path / "prompt.txt"
+    input_file.write_text("What is your name", encoding="utf-8")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "telize",
+            "-f",
+            str(workflow),
+            "--input-file",
+            str(input_file),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "prompt=What is your name" in result.stdout
+
+
 def test_cli_workflow_input_stdin() -> None:
     workflow = FIXTURES / "cli_input_workflow.yaml"
     result = subprocess.run(
@@ -85,3 +112,28 @@ def test_cli_workflow_input_stdin() -> None:
         text=True,
     )
     assert "hello stdin" in result.stdout
+
+
+def test_cli_workflow_input_stdin_plain_text(tmp_path: Path) -> None:
+    workflow = tmp_path / "stdin_text.yaml"
+    workflow.write_text(
+        "config:\n  entrypoint: main\nflows:\n  main:\n    steps:\n"
+        "      - name: greet\n        uses: shell\n"
+        '        run: echo "prompt={{ input.text }}"\n',
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "telize",
+            "-f",
+            str(workflow),
+            "--input-stdin",
+        ],
+        input="What is your name\n",
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "prompt=What is your name" in result.stdout

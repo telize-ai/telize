@@ -212,6 +212,8 @@ Telize uses [Jinja2](https://jinja.palletsprojects.com/) in step fields.
 
 Workflow **input** is provided when invoking Telize from the shell (`--input`, `--input-file`, `--input-stdin`) or by a parent `yaml` step's `input` map when running a nested workflow.
 
+With `--input-stdin` or `--input-file`, input may be a YAML/JSON mapping (`{"name": "Ada"}` → `{{ input.name }}`) or **plain text** (`echo Hello` or a `.txt` file → `{{ input.text }}`).
+
 Example — chain a shell step into an LLM step:
 
 ```yaml
