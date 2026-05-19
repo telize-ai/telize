@@ -32,8 +32,8 @@ def resolve_api_key(model_config: ModelConfig) -> str:
 class OpenAILLMClient:
     """LLM client backed by the official OpenAI Python SDK.
 
-    Works with OpenAI and any OpenAI-compatible endpoint (e.g. local Ollama at
-  ``http://localhost:11434/v1``).
+      Works with OpenAI and any OpenAI-compatible endpoint (e.g. local Ollama at
+    ``http://localhost:11434/v1``).
     """
 
     def __init__(
@@ -95,9 +95,7 @@ class OpenAILLMClient:
                 )
         except APIStatusError as exc:
             detail = exc.message or str(exc)
-            raise ExecutionError(
-                f"LLM API returned HTTP {exc.status_code}: {detail}"
-            ) from exc
+            raise ExecutionError(f"LLM API returned HTTP {exc.status_code}: {detail}") from exc
         except APIConnectionError as exc:
             raise ExecutionError(f"Could not reach LLM API: {exc}") from exc
 

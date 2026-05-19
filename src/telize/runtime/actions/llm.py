@@ -18,9 +18,7 @@ def resolve_model_config(ctx: ActionContext, step: LlmStep) -> ModelConfig:
         return ctx.state.models[step.model]
     except KeyError as exc:
         known = ", ".join(sorted(ctx.state.models)) or "(none)"
-        raise ExecutionError(
-            f"Unknown model {step.model!r}. Defined models: {known}"
-        ) from exc
+        raise ExecutionError(f"Unknown model {step.model!r}. Defined models: {known}") from exc
 
 
 def render_system_prompt(ctx: ActionContext, model_config: ModelConfig) -> str | None:

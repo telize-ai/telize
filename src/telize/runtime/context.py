@@ -19,8 +19,7 @@ def build_template_context(
         "steps": state.steps_view(),
         "config": state.config.model_dump(exclude_none=True),
         "models": {
-            name: model.model_dump(exclude_none=True)
-            for name, model in state.models.items()
+            name: model.model_dump(exclude_none=True) for name, model in state.models.items()
         },
         "input": dict(state.workflow_input),
     }
