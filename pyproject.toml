@@ -1,7 +1,7 @@
 [project]
 name = "telize"
-version = "0.2.1"
-description = "Low-code agent framework: define agents and flows in YAML, run them from the CLI."
+version = "0.2.2"
+description = "Automate with flows, not loose prompts. Chain LLM, shell, and code in one YAML pipeline."
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{ name = "Telize AI", email = "hello@telize.ai" }]
