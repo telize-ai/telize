@@ -38,8 +38,7 @@ def normalize_cli_input(raw: Any, *, source: str) -> dict[str, Any]:
     if isinstance(raw, (bool, int, float)):
         return {"text": str(raw)}
     raise ConfigError(
-        f"Workflow input from {source} must be a mapping or plain text, "
-        f"got {type(raw).__name__}"
+        f"Workflow input from {source} must be a mapping or plain text, got {type(raw).__name__}"
     )
 
 

@@ -25,9 +25,7 @@ def test_merge_workflow_input_later_overrides() -> None:
 
 
 def test_normalize_cli_input_plain_text() -> None:
-    assert normalize_cli_input("What is your name", source="test") == {
-        "text": "What is your name"
-    }
+    assert normalize_cli_input("What is your name", source="test") == {"text": "What is your name"}
 
 
 def test_normalize_cli_input_mapping() -> None:
