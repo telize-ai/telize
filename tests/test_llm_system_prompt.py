@@ -5,12 +5,12 @@ from pathlib import Path
 import pytest
 
 from telize.config import load_spec
-from telize.config.models import GlobalConfig, ModelConfig
+from telize.config.models import GlobalConfig, LlmStep, ModelConfig
+from telize.runtime.actions.base import ActionContext
 from telize.runtime.actions.llm import render_system_prompt, resolve_model_config
 from telize.runtime.context import build_template_context
 from telize.runtime.state import ExecutionState
 from telize.templating import TemplateRenderer
-
 
 FIXTURE = Path(__file__).parent / "fixtures" / "hello_agent_workflow.yaml"
 
@@ -32,9 +32,6 @@ def test_render_system_prompt_with_jinja(monkeypatch: pytest.MonkeyPatch) -> Non
         models={"default": model_config},
         base_path=Path("."),
     )
-    from telize.config.models import LlmStep
-    from telize.runtime.actions.base import ActionContext
-
     step = LlmStep(name="a", model="default", prompt="hi")
     renderer = TemplateRenderer(build_template_context(state))
     ctx = ActionContext(state=state, renderer=renderer, base_path=Path("."))
@@ -48,9 +45,6 @@ def test_render_system_prompt_none_when_unset() -> None:
         models={"default": model_config},
         base_path=Path("."),
     )
-    from telize.config.models import LlmStep
-    from telize.runtime.actions.base import ActionContext
-
     step = LlmStep(name="a", model="default", prompt="hi")
     renderer = TemplateRenderer(build_template_context(state))
     ctx = ActionContext(state=state, renderer=renderer, base_path=Path("."))
