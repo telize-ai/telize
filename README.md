@@ -1,6 +1,6 @@
 # Telize
 
-**Unleash orchestrated AI agents with superhuman reach—build intricate, multi-stage workflows in YAML and command their power from your terminal, under your complete control.**
+**Build reproducible, structured AI workflows with YAML and run them from your terminal, combining LLMs, shell, Python, and more—fully under your control.**
 
 Telize is a low-code framework for building agent-style pipelines: chain shell commands, file I/O, LLM calls, Python functions, and nested flows in a single workflow file. Configuration is validated before execution, and the CLI shows live progress as each step completes.
 
@@ -24,7 +24,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 
 ## Features
 
-- **YAML workflows** — one file defines global config, named flows, and steps
+- **YAML workflows** — one file defines `config`, named `models`, flows, and steps
 - **Composable steps** — `input`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
 - **Jinja templating** — wire step outputs together with `{{ steps.name.output }}`
 - **Loops and sub-flows** — iterate LLM steps over split lists; call nested flows with `uses: flow`
@@ -35,7 +35,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 ## Requirements
 
 - **Python 3.12+**
-- **LLM endpoint** for `uses: llm` steps — [OpenAI](https://platform.openai.com/) or [Ollama](https://ollama.com/) (OpenAI-compatible at `http://localhost:11434` by default)
+- **LLM endpoint** for `uses: llm` steps — [OpenAI](https://platform.openai.com/) or [Ollama](https://ollama.com/); set `api_url` on each model profile (default `http://localhost:11434`)
 - Optional: [uv](https://docs.astral.sh/uv/) for fast local development
 
 ## Installation
@@ -64,25 +64,29 @@ telize --version
 **1.** For local models, start [Ollama](https://ollama.com/) and pull a model:
 
 ```bash
-ollama pull qwen3.5:4b   # or any model you set in config
+ollama pull qwen3.5:4b   # or any model id you set under models.*.model
 ```
 
-For OpenAI Cloud, set `OPENAI_API_KEY` and use `api_base_url: https://api.openai.com/v1` (or omit `api_base_url` to use the SDK default).
+For OpenAI Cloud, set `OPENAI_API_KEY` and point a model profile at the API, for example `api_url: https://api.openai.com/v1`.
 
 **2.** Create `hello.yaml`:
 
 ```yaml
 config:
-  provider: openai
-  model: qwen3.5:4b
-  api_base_url: http://localhost:11434
   entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: qwen3.5:4b
+    api_url: http://localhost:11434
 
 flows:
   main:
     steps:
       - name: greet
         uses: llm
+        model: default
         prompt: Say hello in one friendly sentence.
 ```
 
@@ -119,9 +123,9 @@ telize -f examples/spec_reference.yaml --validate-only
               (step → step)                (split & iterate)               (uses: flow)
 ```
 
-1. Telize loads your YAML and validates it against typed models.
+1. Telize loads your YAML and validates it against typed Pydantic models.
 2. The flow named in `config.entrypoint` runs first.
-3. Each step executes through a registered action (`input`, `llm`, `shell`, …).
+3. Each step executes through a registered action (`input`, `llm`, `shell`, …); `llm` steps resolve their `model:` profile from the top-level `models` map.
 4. Later steps can reference earlier outputs via Jinja templates.
 5. The CLI prints progress and results as the workflow runs.
 
@@ -131,8 +135,54 @@ telize -f examples/spec_reference.yaml --validate-only
 
 | Key | Description |
 |-----|-------------|
-| `config` | Global settings: `entrypoint`, `provider`, `model`, `temperature`, `api_base_url`, `api_key`, `system_prompt` |
+| `config` | Global settings: `entrypoint` (which flow runs first) |
+| `models` | Named LLM profiles; referenced by `model:` on each `uses: llm` step |
 | `flows` | Named flows; `config.entrypoint` must match one of these keys |
+
+### `config`
+
+| Field | Description |
+|-------|-------------|
+| `entrypoint` | Name of the flow to run when the file is executed |
+
+### `models`
+
+Each key under `models` is a profile name (for example `default`, `creative`). LLM steps pick a profile with `model: <name>`.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `provider` | no (default `openai`) | Registered provider id |
+| `model` | yes | Model id passed to the provider (e.g. `qwen3.5:4b`, `gpt-4o-mini`) |
+| `temperature` | no | Sampling temperature (0–2) |
+| `api_url` | no (default `http://localhost:11434`) | OpenAI-compatible API base URL (`/v1` is appended automatically) |
+| `api_key` | no | API key; use `{{ env.OPENAI_API_KEY }}` or rely on the `OPENAI_API_KEY` env var |
+| `system_prompt` | no | System message for steps using this profile (Jinja at runtime) |
+
+Example — multiple profiles:
+
+```yaml
+models:
+  factual:
+    model: qwen3.5:4b
+    temperature: 0.2
+    api_url: http://localhost:11434
+    system_prompt: Be concise and factual.
+
+  creative:
+    model: qwen3.5:4b
+    temperature: 1.0
+    api_url: http://localhost:11434
+    system_prompt: Be witty but brief.
+```
+
+Load-time env in `api_url` (see [`examples/env_config.yaml`](examples/env_config.yaml)):
+
+```yaml
+models:
+  default:
+    model: qwen3.5:4b
+    api_url: http://{{ env.OLLAMA_HOST }}:11434
+```
 
 ### Flow
 
@@ -145,11 +195,11 @@ telize -f examples/spec_reference.yaml --validate-only
 | `uses` | Description |
 |--------|-------------|
 | `input` | Read a `file` or a `directory` (with glob `include`) |
-| `llm` | Send a `prompt` to the configured model; optional `output_to`, `loop` |
+| `llm` | Send a `prompt` using a named `model` from `models`; optional `output_to`, `loop` |
 | `shell` | Run `run` commands; optional `envs` (supports templates) |
 | `python` | Call `call` (`module.function`) with `args` |
 | `flow` | Run another flow via `run` |
-| `yaml` | Run an external workflow from `file` (own `config` and `flows`); optional `input` map passed to the child as `{{ input.key }}` |
+| `yaml` | Run an external workflow from `file` (own `config`, `models`, and `flows`); optional `input` map passed to the child as `{{ input.key }}` |
 
 ### Templating
 
@@ -158,7 +208,7 @@ Telize uses [Jinja2](https://jinja.palletsprojects.com/) in step fields.
 | When | What you can use |
 |------|------------------|
 | **Load time** | `{{ env.VAR }}` — expanded when the file is parsed |
-| **Runtime** | `{{ steps.<name>.output }}`, `{{ config.model }}`, `{{ input.<key> }}`, `{{ item }}` (inside loops) |
+| **Runtime** | `{{ steps.<name>.output }}`, `{{ models.<name>.model }}`, `{{ input.<key> }}`, `{{ item }}` (inside loops) |
 
 Workflow **input** is provided when invoking Telize from the shell (`--input`, `--input-file`, `--input-stdin`) or by a parent `yaml` step's `input` map when running a nested workflow.
 
@@ -171,6 +221,7 @@ Example — chain a shell step into an LLM step:
 
 - name: summarize
   uses: llm
+  model: default
   prompt: |
     Summarize this:
     {{ steps.fetch_data.output }}
