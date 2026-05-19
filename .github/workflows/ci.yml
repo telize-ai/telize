@@ -44,6 +44,9 @@ jobs:
 
   cli-smoke:
     runs-on: ubuntu-latest
+    env:
+      # Used by examples/env_config.yaml ({{ env.OLLAMA_HOST }} in models.*.api_url)
+      OLLAMA_HOST: localhost
     steps:
       - uses: actions/checkout@v4
 
