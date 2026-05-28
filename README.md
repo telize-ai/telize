@@ -1,4 +1,4 @@
-# Telize
+# 🚀 Telize
 
 **Build reproducible, structured AI workflows with YAML and run them from your terminal, combining LLMs, shell, Python, and more—fully under your control.**
 
@@ -10,22 +10,22 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 
 ---
 
-## Table of contents
+## 🧭 Table of contents
 
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Quick start](#quick-start)
-- [Motivation](#-motivation)
-- [How it works](#how-it-works)
-- [Workflow reference](#workflow-reference)
-- [Examples](#examples)
-- [CLI](#cli)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
+- [✨ Features](#-features)
+- [🧩 Requirements](#-requirements)
+- [📦 Installation](#-installation)
+- [⚡ Quick start](#-quick-start)
+- [🚀 Motivation](#-motivation)
+- [⚙️ How it works](#-how-it-works)
+- [📚 Workflow reference](#-workflow-reference)
+- [🧪 Examples](#-examples)
+- [💻 CLI](#-cli)
+- [🛠️ Development](#-development)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
-## Features
+## ✨ Features
 
 - **YAML workflows** — one file defines `config`, named `models`, flows, and steps
 - **Composable steps** — `input`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
@@ -35,13 +35,13 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - **Rich CLI output** — progress, step panels, and errors in the terminal
 - **OpenAI-compatible LLMs** — official OpenAI API or local [Ollama](https://ollama.com/) via the same client
 
-## Requirements
+## 🧩 Requirements
 
 - **Python 3.12+**
 - **LLM endpoint** for `uses: llm` steps — [OpenAI](https://platform.openai.com/) or [Ollama](https://ollama.com/); set `api_url` on each model profile (default `http://localhost:11434`)
 - Optional: [uv](https://docs.astral.sh/uv/) for fast local development
 
-## Installation
+## 📦 Installation
 
 ```bash
 pip install telize
@@ -62,7 +62,7 @@ Check the install:
 telize --version
 ```
 
-## Quick start
+## ⚡ Quick start
 
 **1.** For local models, start [Ollama](https://ollama.com/) and pull a model:
 
@@ -125,7 +125,7 @@ By treating LLMs as just another step in a standard automation pipeline, it brin
 
 ---
 
-### ✨ Why it works:
+### 🧠 Why it works
 - **Deterministic Structure + Non-Deterministic AI:**  
   It keeps the overall architecture _rigid and predictable_ (`YAML`), while allowing the AI to handle the _fuzzy, creative tasks_ (**text generation, summarization**) within strict boundaries.
 - **Upfront Validation:**  
@@ -147,7 +147,7 @@ By treating LLMs as just another step in a standard automation pipeline, it brin
 
 ---
 
-### ⚡ Where Telize Might Struggle (_The Limitations_)
+### ⚠️ Where Telize Might Struggle (_The Limitations_)
 While it is great for **structured automation**, it isn’t a silver bullet:
 
 - **Dynamic Decision Making:**  
@@ -157,7 +157,7 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 
 ---
 
-## How it works
+## ⚙️ How it works
 
 1. Telize loads your YAML and validates it against typed Pydantic models.
 2. The flow named in `config.entrypoint` runs first.
@@ -165,9 +165,9 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 4. Later steps can reference earlier outputs via Jinja templates.
 5. The CLI prints progress and results as the workflow runs.
 
-## Workflow reference
+## 📚 Workflow reference
 
-### Top-level structure
+### 🧱 Top-level structure
 
 | Key      | Description                                                         |
 | -------- | ------------------------------------------------------------------- |
@@ -175,13 +175,13 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 | `models` | Named LLM profiles; referenced by `model:` on each `uses: llm` step |
 | `flows`  | Named flows; `config.entrypoint` must match one of these keys       |
 
-### `config`
+### ⚙️ `config`
 
 | Field        | Description                                       |
 | ------------ | ------------------------------------------------- |
 | `entrypoint` | Name of the flow to run when the file is executed |
 
-### `models`
+### 🤖 `models`
 
 Each key under `models` is a profile name (for example `default`, `creative`). LLM steps pick a profile with `model: <name>`.
 
@@ -220,24 +220,31 @@ models:
     api_url: http://{{ env.OLLAMA_HOST }}:11434
 ```
 
-### Flow
+### 🌊 Flow
 
 | Field   | Description                                               |
 | ------- | --------------------------------------------------------- |
 | `steps` | List of steps (unique `name` per flow), executed in order |
 
-### Steps (`uses`)
+Every step also supports:
+
+| Field        | Description                                                                 |
+| ------------ | --------------------------------------------------------------------------- |
+| `name`       | Unique id within the flow; referenced as `{{ steps.<name>.output }}`        |
+| `output_to`  | Optional path (relative to the workflow file); raw step output is written when the step finishes |
+
+### 🪜 Steps (`uses`)
 
 | `uses`   | Description                                                                                                                               |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `input`  | Read a `file` or a `directory` (with glob `include`)                                                                                      |
-| `llm`    | Send a `prompt` using a named `model` from `models`; optional `output_to`, `loop`                                                         |
+| `input`  | Read a `file` or a `directory` (with glob `include`; optional `separator` when joining directory files, default `\n\n`)                   |
+| `llm`    | Send a `prompt` using a named `model` from `models`; optional `loop`                                                                      |
 | `shell`  | Run `run` commands; optional `envs` (supports templates)                                                                                  |
 | `python` | Call `call` (`module.function`) with `args`                                                                                               |
 | `flow`   | Run another flow via `run`                                                                                                                |
 | `yaml`   | Run an external workflow from `file` (own `config`, `models`, and `flows`); optional `input` map passed to the child as `{{ input.key }}` |
 
-### Templating
+### 🧩 Templating
 
 Telize uses [Jinja2](https://jinja.palletsprojects.com/) in step fields.
 
@@ -265,7 +272,7 @@ Example — chain a shell step into an LLM step:
     {{ steps.fetch_data.output }}
 ```
 
-## Examples
+## 🧪 Examples
 
 | File                                                             | What it demonstrates                                     |
 | ---------------------------------------------------------------- | -------------------------------------------------------- |
@@ -274,7 +281,7 @@ Example — chain a shell step into an LLM step:
 | [`examples/shell_to_llm.yaml`](examples/shell_to_llm.yaml)       | Shell → LLM with `{{ steps.*.output }}`                  |
 | [`examples/read_file.yaml`](examples/read_file.yaml)             | `uses: input` — single file                              |
 | [`examples/read_directory.yaml`](examples/read_directory.yaml)   | `uses: input` — directory glob                           |
-| [`examples/llm_save_output.yaml`](examples/llm_save_output.yaml) | `output_to` — persist LLM text to disk                   |
+| [`examples/llm_save_output.yaml`](examples/llm_save_output.yaml) | `output_to` — persist step output to disk                |
 | [`examples/llm_loop.yaml`](examples/llm_loop.yaml)               | `loop` — split output and iterate                        |
 | [`examples/call_subflow.yaml`](examples/call_subflow.yaml)       | `uses: flow` — sub-flow in the same file                 |
 | [`examples/nested_workflow.yaml`](examples/nested_workflow.yaml) | `uses: yaml` — external workflow + `input`               |
@@ -283,7 +290,7 @@ Example — chain a shell step into an LLM step:
 | [`examples/shell_with_env.yaml`](examples/shell_with_env.yaml)   | Shell `envs` and load-time `{{ env.* }}`                 |
 | [`examples/env_config.yaml`](examples/env_config.yaml)           | `{{ env.VAR }}` in the `models` section at load time     |
 
-## CLI
+## 💻 CLI
 
 ```
 usage: telize [-h] [--version] [-f FILE] [--validate-only]
@@ -295,7 +302,7 @@ options:
   --validate-only    parse and validate without running steps
 ```
 
-## Development
+## 🛠️ Development
 
 ```bash
 uv sync
@@ -307,11 +314,11 @@ uv run mypy
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for pull request guidelines and [CHANGELOG.md](CHANGELOG.md) for release notes.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome — bug reports, docs, and pull requests. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and open an [issue](https://github.com/telize-ai/telize/issues) before large changes.
 
-## License
+## 📄 License
 
 Apache License 2.0 — see [LICENSE](LICENSE).
 
