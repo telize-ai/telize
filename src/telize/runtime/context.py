@@ -23,8 +23,9 @@ def build_template_context(
         },
         "input": dict(state.workflow_input),
     }
-    if item is not None:
-        ctx["item"] = item
+    effective_item = item if item is not None else state.loop_item
+    if effective_item is not None:
+        ctx["item"] = effective_item
     if extra:
         ctx.update(extra)
     return ctx

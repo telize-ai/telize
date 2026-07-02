@@ -7,7 +7,8 @@ from rich.rule import Rule
 from rich.status import Status
 
 from telize.config.models import Step, WorkflowSpec
-from telize.console.display import get_console, print_step_panel, print_workflow_header
+from telize.console.display import print_step_panel, print_workflow_header
+from telize.console.terminal import get_console
 from telize.runtime.state import StepResult
 
 
@@ -23,6 +24,8 @@ class RichConsoleObserver:
         self._completed = 0
         self._step_indices: dict[str, int] = {}
         self._status: Status | None = None
+        self._active_step: Step | None = None
+        self._active_index: int = 0
 
     def on_workflow_start(self, entrypoint: str, *, estimated_steps: int) -> None:
         self._estimated = max(estimated_steps, 1)
@@ -42,14 +45,27 @@ class RichConsoleObserver:
 
     def on_step_start(self, flow_name: str, step: Step, *, index: int) -> None:
         self._step_indices[f"{flow_name}:{step.name}"] = index
+        self._active_step = step
+        self._active_index = index
         if self._status is not None:
             self._status.stop()
+        if step.uses == "chat":
+            self._status = None
+            return
         self._status = Status(
-            f"[bold]Step {index}/{self._estimated}[/]  {step.name} [dim]({step.uses})[/]",
+            self._step_status_text(step, index),
             console=self._console,
             spinner="dots",
         )
         self._status.start()
+
+    def on_step_loop_progress(
+        self, flow_name: str, step: Step, *, current: int, total: int
+    ) -> None:
+        if self._status is None:
+            return
+        index = self._step_indices.get(f"{flow_name}:{step.name}", self._active_index)
+        self._status.update(self._step_status_text(step, index, current=current, total=total))
 
     def on_step_complete(self, flow_name: str, step: Step, result: StepResult) -> None:
         if self._status is not None:
@@ -65,6 +81,19 @@ class RichConsoleObserver:
         index = self._step_indices.get(f"{flow_name}:{step.name}", self._completed)
         print_step_panel(result, index=index)
         self._console.print()
+
+    def _step_status_text(
+        self,
+        step: Step,
+        index: int,
+        *,
+        current: int | None = None,
+        total: int | None = None,
+    ) -> str:
+        text = f"[bold]Step {index}/{self._estimated}[/]  {step.name} [dim]({step.uses})[/]"
+        if current is not None and total is not None:
+            text += f" [dim]|[/] item {current}/{total}"
+        return text
 
     def on_step_error(self, flow_name: str, step: Step, error: BaseException) -> None:
         if self._status is not None:
@@ -85,3 +114,9 @@ class RichConsoleObserver:
                 style="dim",
             )
         )
+
+    def on_workflow_interrupted(self) -> None:
+        if self._status is not None:
+            self._status.stop()
+            self._status = None
+        self._console.print(Rule("[yellow]Interrupted[/]", style="dim"))

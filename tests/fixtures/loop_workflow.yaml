@@ -1,0 +1,18 @@
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: test
+
+flows:
+  main:
+    steps:
+      - name: loop_llm
+        uses: llm
+        model: default
+        loop:
+          items: "alpha, beta, gamma"
+          split_by: ","
+        prompt: "item={{ item }}"

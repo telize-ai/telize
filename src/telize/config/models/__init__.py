@@ -1,4 +1,5 @@
 from telize.config.models.actions import (
+    ChatStep,
     FlowRefStep,
     InputStep,
     LlmStep,
@@ -13,6 +14,7 @@ from telize.config.models.flow import Flow
 from telize.config.models.spec import WorkflowSpec
 
 __all__ = [
+    "ChatStep",
     "Flow",
     "FlowRefStep",
     "GlobalConfig",

@@ -1,4 +1,4 @@
-# Write LLM output to disk with output_to (path relative to this file).
+# Write step output to disk with output_to (path relative to this file).
 #
 # Run:
 #   telize -f examples/llm_save_output.yaml

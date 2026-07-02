@@ -3,6 +3,7 @@ from __future__ import annotations
 from telize.config.models import Step
 from telize.exceptions import ExecutionError
 from telize.runtime.actions.base import ActionContext, ActionExecutor
+from telize.runtime.actions.chat import ChatActionExecutor
 from telize.runtime.actions.input import InputActionExecutor
 from telize.runtime.actions.llm import LlmActionExecutor
 from telize.runtime.actions.python import PythonActionExecutor
@@ -31,6 +32,7 @@ def default_registry() -> ActionRegistry:
     registry = ActionRegistry()
     for executor in (
         InputActionExecutor(),
+        ChatActionExecutor(),
         LlmActionExecutor(),
         ShellActionExecutor(),
         PythonActionExecutor(),

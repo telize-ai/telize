@@ -27,6 +27,7 @@ class ExecutionState:
     models: dict[str, ModelConfig] = field(default_factory=dict)
     workflow_input: dict[str, Any] = field(default_factory=dict)
     steps: dict[str, StepResult] = field(default_factory=dict)
+    loop_item: str | None = None
 
     def set_step(self, result: StepResult) -> None:
         self.steps[result.name] = result

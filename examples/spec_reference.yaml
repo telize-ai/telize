@@ -15,6 +15,10 @@
 config:
   # entrypoint — name of the flow that runs when you execute this file
   entrypoint: release_pipeline
+  # repeat — optional; omit, null, or -1 to run once. 0 restarts immediately after
+  # each run finishes. N>0 restarts N seconds after each run started (or immediately
+  # if the run took longer than N seconds).
+  # repeat: 0
 
 # models — named LLM profiles referenced by `model:` on llm steps
 models:
@@ -63,7 +67,7 @@ flows:
 
           Draft Documents:
           {{ steps.fetch_context_docs.output }}
-        # output_to — optional path; raw LLM text is written when the step finishes
+        # output_to — optional path; raw step output is written when the step finishes
         output_to: ./reports/documentation_gap_analysis.md
 
       - name: generate_marketing_copy
@@ -89,7 +93,6 @@ flows:
         loop:
           items: "{{ steps.get_keywords.output }}"
           split_by: ","
-          execution: sequential   # or parallel
         prompt: |
           Create 2 social hashtags for this topic: {{ item }}
 

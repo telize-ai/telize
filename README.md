@@ -30,7 +30,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - **YAML workflows** — one file defines `config`, named `models`, flows, and steps
 - **Composable steps** — `input`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
 - **Jinja templating** — wire step outputs together with `{{ steps.name.output }}`
-- **Loops and sub-flows** — iterate LLM steps over split lists; call nested flows with `uses: flow`
+- **Loops and sub-flows** — add `loop` to any step to iterate it over split lists; call nested flows with `uses: flow`
 - **Validated upfront** — Pydantic models catch schema errors before any step runs
 - **Rich CLI output** — progress, step panels, and errors in the terminal
 - **OpenAI-compatible LLMs** — official OpenAI API or local [Ollama](https://ollama.com/) via the same client
@@ -180,6 +180,7 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 | Field        | Description                                       |
 | ------------ | ------------------------------------------------- |
 | `entrypoint` | Name of the flow to run when the file is executed |
+| `repeat`     | Optional repeat interval in seconds. Omitted, `null`, or `-1`: run once. `0`: restart immediately after each run finishes. `N > 0`: restart `N` seconds after each run started; if a run exceeds `N` seconds, restart immediately when it finishes |
 
 ### 🤖 `models`
 
@@ -232,13 +233,14 @@ Every step also supports:
 | ------------ | --------------------------------------------------------------------------- |
 | `name`       | Unique id within the flow; referenced as `{{ steps.<name>.output }}`        |
 | `output_to`  | Optional path (relative to the workflow file); raw step output is written when the step finishes |
+| `loop`       | Optional; run the step once per item (`items` split by `split_by`, default `\n<|separator|>\n`), exposing each as `{{ item }}` and joining outputs with `separator` (default `\n<|separator|>\n`) |
 
 ### 🪜 Steps (`uses`)
 
 | `uses`   | Description                                                                                                                               |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `input`  | Read a `file` or a `directory` (with glob `include`; optional `separator` when joining directory files, default `\n\n`)                   |
-| `llm`    | Send a `prompt` using a named `model` from `models`; optional `loop`                                                                      |
+| `input`  | Read a `file` or a `directory` (with glob `include`; optional `separator` when joining directory files, default `\n<|separator|>\n`)                   |
+| `llm`    | Send a `prompt` using a named `model` from `models`                                                                                       |
 | `shell`  | Run `run` commands; optional `envs` (supports templates)                                                                                  |
 | `python` | Call `call` (`module.function`) with `args`                                                                                               |
 | `flow`   | Run another flow via `run`                                                                                                                |

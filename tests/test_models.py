@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from telize.config import load_spec
+from telize.config.models import LoopConfig
 
 FIXTURES = Path(__file__).parent / "fixtures"
 HELLO_AGENT = FIXTURES / "hello_agent_workflow.yaml"
@@ -26,6 +27,12 @@ def test_load_hello_agent_fixture() -> None:
     swarm = spec.flows["risk_assessment_swarm"]
     assert len(swarm.steps) == 2
     assert swarm.steps[0].name == "legal_agent"
+
+
+def test_loop_config_default_split_by() -> None:
+    loop = LoopConfig(items="{{ steps.foo.output }}")
+    assert loop.split_by == "\n<|separator|>\n"
+    assert loop.separator == "\n<|separator|>\n"
 
 
 def test_llm_step_fields() -> None:

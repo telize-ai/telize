@@ -109,6 +109,8 @@ def main(argv: list[str] | None = None) -> None:
             observer=observer,
             workflow_input=workflow_input,
         ).run()
+    except KeyboardInterrupt:
+        sys.exit(130)
     except (ConfigError, ExecutionError) as exc:
         _print_error(str(exc))
         sys.exit(1)

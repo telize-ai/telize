@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class LoopConfig(BaseModel):
-    """Iterate an LLM step over items produced from a prior step's output."""
+    """Iterate a step over items produced from a prior step's output."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -14,12 +14,12 @@ class LoopConfig(BaseModel):
         description="Jinja template resolving to a delimited list (e.g. `{{ steps.foo.output }}`).",
     )
     split_by: str = Field(
-        default=",",
+        default="\n<|separator|>\n",
         description="Delimiter used to split `items` into separate loop iterations.",
     )
-    execution: Literal["sequential", "parallel"] = Field(
-        default="sequential",
-        description="How loop iterations are scheduled.",
+    separator: str = Field(
+        default="\n<|separator|>\n",
+        description="String inserted between each iteration's output when joining results.",
     )
 
 
@@ -30,6 +30,10 @@ class DirectoryInput(BaseModel):
 
     path: str
     include: str = Field(default="*", description="Glob pattern for files to include.")
+    separator: str = Field(
+        default="\n<|separator|>\n",
+        description="String inserted between each file section when joining.",
+    )
 
 
 class _StepBase(BaseModel):
@@ -40,6 +44,17 @@ class _StepBase(BaseModel):
     name: str = Field(
         min_length=1,
         description="Unique step id within the flow; referenced as `steps.<name>.output`.",
+    )
+    output_to: str | None = Field(
+        default=None,
+        description="Optional path to write raw step output when the step completes.",
+    )
+    loop: LoopConfig | None = Field(
+        default=None,
+        description=(
+            "Optional loop config; runs the step once per item, exposing the "
+            "current value as `{{ item }}` and joining outputs with `separator`."
+        ),
     )
 
 
@@ -68,11 +83,6 @@ class LlmStep(_StepBase):
         description="Name of a model defined in the top-level `models` mapping.",
     )
     prompt: str
-    output_to: str | None = Field(
-        default=None,
-        description="Optional path to write raw output after the step completes.",
-    )
-    loop: LoopConfig | None = None
 
 
 class ShellStep(_StepBase):
@@ -106,6 +116,16 @@ class FlowRefStep(_StepBase):
     run: str = Field(description="Name of the flow to execute.")
 
 
+class ChatStep(_StepBase):
+    """Prompt the user for input interactively in the terminal."""
+
+    uses: Literal["chat"] = "chat"
+    message: str = Field(
+        default="",
+        description="Optional message shown before collecting user input (supports Jinja).",
+    )
+
+
 class YamlStep(_StepBase):
     """Run a workflow defined in an external YAML file."""
 
@@ -123,6 +143,6 @@ class YamlStep(_StepBase):
 
 
 Step = Annotated[
-    InputStep | LlmStep | ShellStep | PythonStep | FlowRefStep | YamlStep,
+    InputStep | LlmStep | ShellStep | PythonStep | FlowRefStep | ChatStep | YamlStep,
     Field(discriminator="uses"),
 ]

@@ -1,0 +1,26 @@
+# Pause the workflow and ask the user for input with uses: chat.
+config:
+  entrypoint: main
+
+models:
+  default:
+    provider: openai
+    model: gpt-4o-mini
+    api_url: https://api.openai.com/v1
+
+flows:
+  main:
+    steps:
+      - name: user_chat
+        uses: chat
+        message: |
+          What would you like help with today?
+
+      - name: respond
+        uses: llm
+        model: default
+        prompt: |
+          The user said:
+          {{ steps.user_chat.output }}
+
+          Reply briefly and helpfully.

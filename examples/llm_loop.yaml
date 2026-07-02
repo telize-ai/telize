@@ -28,6 +28,5 @@ flows:
         loop:
           items: "{{ steps.topics.output }}"
           split_by: ","
-          execution: sequential
         prompt: |
           Reply with one short hashtag for the topic "{{ item }}" (no explanation).

@@ -14,10 +14,10 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_steps_printed_in_execution_order() -> None:
-    import telize.console.display as display
+    import telize.console.terminal as terminal
 
     buffer = StringIO()
-    display._CONSOLE = Console(file=buffer, width=120, force_terminal=True)
+    terminal._CONSOLE = Console(file=buffer, width=120, force_terminal=True)
 
     path = FIXTURES / "minimal_workflow.yaml"
     spec = load_spec(path)
@@ -32,4 +32,32 @@ def test_steps_printed_in_execution_order() -> None:
     assert greet_pos != -1 and echo_pos != -1
     assert greet_pos < echo_pos, "greet should appear before echo_greet in output"
 
-    display._CONSOLE = None
+    terminal._CONSOLE = None
+
+
+def test_loop_progress_updates_status_in_place() -> None:
+    path = FIXTURES / "loop_workflow.yaml"
+    spec = load_spec(path)
+    observer = RichConsoleObserver(spec, path)
+    observer._estimated = 1
+    step = spec.flows["main"].steps[0]
+
+    status_updates: list[str] = []
+
+    class CapturingStatus:
+        def __init__(self, status: str, **kwargs: object) -> None:
+            status_updates.append(status)
+
+        def start(self) -> None: ...
+
+        def stop(self) -> None: ...
+
+        def update(self, status: str, **kwargs: object) -> None:
+            status_updates.append(status)
+
+    with patch("telize.console.observer.Status", CapturingStatus):
+        observer.on_step_start("main", step, index=1)
+        observer.on_step_loop_progress("main", step, current=2, total=10)
+
+    assert status_updates[0] == "[bold]Step 1/1[/]  loop_llm [dim](llm)[/]"
+    assert status_updates[-1] == "[bold]Step 1/1[/]  loop_llm [dim](llm)[/] [dim]|[/] item 2/10"

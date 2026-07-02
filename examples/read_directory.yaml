@@ -22,6 +22,7 @@ flows:
         directory:
           path: ./data/notes
           include: "*.md"
+          separator: "\n\n===\n\n"
 
       - name: merge_summary
         uses: llm

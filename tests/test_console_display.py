@@ -24,15 +24,15 @@ def _plain_console_output(buffer: StringIO) -> str:
 
 @pytest.fixture
 def console_buffer():
-    import telize.console.display as display
+    import telize.console.terminal as terminal
 
     buffer = StringIO()
-    previous = display._CONSOLE
-    display._CONSOLE = Console(file=buffer, width=120, force_terminal=True)
+    previous = terminal._CONSOLE
+    terminal._CONSOLE = Console(file=buffer, width=120, force_terminal=True)
     try:
         yield buffer
     finally:
-        display._CONSOLE = previous
+        terminal._CONSOLE = previous
 
 
 def test_print_workflow_results_renders(console_buffer: StringIO) -> None:

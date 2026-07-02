@@ -11,6 +11,16 @@ class GlobalConfig(BaseModel):
     entrypoint: str = Field(
         description="Name of the flow in `flows` that runs when the file is executed.",
     )
+    repeat: int | None = Field(
+        default=None,
+        ge=-1,
+        description=(
+            "Repeat the entrypoint flow on a timer. Omitted, null, or -1: run once. "
+            "0: restart immediately after each run finishes. "
+            "N>0: restart N seconds after each run started; if a run exceeds N seconds, "
+            "restart immediately when it finishes."
+        ),
+    )
 
 
 class ModelConfig(BaseModel):

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.rule import Rule
@@ -11,25 +10,18 @@ from rich.table import Table
 from rich.text import Text
 
 from telize.config.models import WorkflowSpec
+from telize.console.terminal import get_console
 from telize.runtime.state import ExecutionState, StepResult
-
-_CONSOLE: Console | None = None
 
 ACTION_LABELS: dict[str, tuple[str, str]] = {
     "llm": ("LLM", "bold magenta"),
     "shell": ("SHELL", "bold yellow"),
     "python": ("PYTHON", "bold cyan"),
     "input": ("INPUT", "bold green"),
+    "chat": ("CHAT", "bold #a371f7"),
     "flow": ("FLOW", "bold red"),
     "yaml": ("YAML", "bold blue"),
 }
-
-
-def get_console() -> Console:
-    global _CONSOLE
-    if _CONSOLE is None:
-        _CONSOLE = Console(highlight=False)
-    return _CONSOLE
 
 
 def print_validation_ok(
@@ -151,6 +143,7 @@ def _panel_border(uses: str) -> str:
         "shell": "yellow",
         "python": "cyan",
         "input": "green",
+        "chat": "#a371f7",
         "flow": "red",
         "yaml": "blue",
     }.get(uses, "white")
