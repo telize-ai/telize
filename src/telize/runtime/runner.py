@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import time
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from croniter import croniter
 
 from telize.config import load_spec
 from telize.config.models import Flow, FlowRefStep, Step, WorkflowSpec
@@ -16,11 +19,11 @@ from telize.runtime.state import ExecutionState, StepResult
 from telize.templating.renderer import TemplateRenderer
 
 
-def repeat_wait_seconds(repeat: int, elapsed: float) -> float:
-    """Return how long to wait before the next workflow iteration."""
-    if repeat == 0:
-        return 0.0
-    return max(0.0, repeat - elapsed)
+def cron_wait_seconds(cron_expr: str, *, now: datetime | None = None) -> float:
+    """Return how long to wait until the next cron occurrence after ``now``."""
+    base = now or datetime.now()
+    next_run = croniter(cron_expr, base).get_next(datetime)
+    return max(0.0, (next_run - base).total_seconds())
 
 
 def entrypoint_output(spec: WorkflowSpec, state: ExecutionState) -> str:
@@ -52,8 +55,8 @@ class WorkflowRunner:
         self._step_counter = 0
 
     def run(self) -> ExecutionState:
-        repeat = self._spec.config.repeat
-        if repeat is None or repeat == -1:
+        cron = self._spec.config.cron
+        if cron is None:
             try:
                 return self._run_once()
             except KeyboardInterrupt:
@@ -63,9 +66,8 @@ class WorkflowRunner:
         state: ExecutionState | None = None
         while True:
             try:
-                started = time.monotonic()
                 state = self._run_once()
-                wait = repeat_wait_seconds(repeat, time.monotonic() - started)
+                wait = cron_wait_seconds(cron)
                 if wait > 0:
                     time.sleep(wait)
             except KeyboardInterrupt:

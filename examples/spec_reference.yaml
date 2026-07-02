@@ -15,10 +15,9 @@
 config:
   # entrypoint — name of the flow that runs when you execute this file
   entrypoint: release_pipeline
-  # repeat — optional; omit, null, or -1 to run once. 0 restarts immediately after
-  # each run finishes. N>0 restarts N seconds after each run started (or immediately
-  # if the run took longer than N seconds).
-  # repeat: 0
+  # cron — optional; omit or null to run once. When set, reruns on the schedule
+  # after each run finishes (standard five-field cron syntax).
+  # cron: "0 * * * *"
 
 # models — named LLM profiles referenced by `model:` on llm steps
 models:

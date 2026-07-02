@@ -1,6 +1,6 @@
 [project]
 name = "telize"
-version = "0.3.0"
+version = "0.3.1"
 description = "Automate with flows, not loose prompts. Chain LLM, shell, and code in one YAML pipeline."
 readme = "README.md"
 license = "Apache-2.0"
@@ -20,6 +20,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "croniter>=2.0",
     "httpx>=0.28",
     "openai>=1.0",
     "jinja2>=3.1",

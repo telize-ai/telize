@@ -33,6 +33,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - **Loops and sub-flows** — add `loop` to any step to iterate it over split lists; call nested flows with `uses: flow`
 - **Validated upfront** — Pydantic models catch schema errors before any step runs
 - **Rich CLI output** — progress, step panels, and errors in the terminal
+- **Cron scheduling** — optional `config.cron` reruns the entrypoint on a standard five-field schedule
 - **OpenAI-compatible LLMs** — official OpenAI API or local [Ollama](https://ollama.com/) via the same client
 
 ## 🧩 Requirements
@@ -163,7 +164,8 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 2. The flow named in `config.entrypoint` runs first.
 3. Each step executes through a registered action (`input`, `chat`, `llm`, `shell`, …); `llm` steps resolve their `model:` profile from the top-level `models` map.
 4. Later steps can reference earlier outputs via Jinja templates.
-5. The CLI prints progress and results as the workflow runs.
+5. When `config.cron` is set, Telize reruns the entrypoint after each run finishes, waiting until the next scheduled time.
+6. The CLI prints progress and results as the workflow runs.
 
 ## 📚 Workflow reference
 
@@ -180,7 +182,15 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 | Field        | Description                                       |
 | ------------ | ------------------------------------------------- |
 | `entrypoint` | Name of the flow to run when the file is executed |
-| `repeat`     | Optional repeat interval in seconds. Omitted, `null`, or `-1`: run once. `0`: restart immediately after each run finishes. `N > 0`: restart `N` seconds after each run started; if a run exceeds `N` seconds, restart immediately when it finishes |
+| `cron`       | Optional cron schedule (five-field syntax, e.g. `0 * * * *` for hourly). Omitted or `null`: run once. When set, the workflow reruns on the schedule after each run finishes |
+
+Example — run every hour:
+
+```yaml
+config:
+  entrypoint: main
+  cron: "0 * * * *"
+```
 
 ### 🤖 `models`
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from croniter import croniter
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class GlobalConfig(BaseModel):
@@ -11,16 +12,22 @@ class GlobalConfig(BaseModel):
     entrypoint: str = Field(
         description="Name of the flow in `flows` that runs when the file is executed.",
     )
-    repeat: int | None = Field(
+    cron: str | None = Field(
         default=None,
-        ge=-1,
         description=(
-            "Repeat the entrypoint flow on a timer. Omitted, null, or -1: run once. "
-            "0: restart immediately after each run finishes. "
-            "N>0: restart N seconds after each run started; if a run exceeds N seconds, "
-            "restart immediately when it finishes."
+            "Cron schedule for the entrypoint flow. Omitted or null: run once. "
+            "When set, the workflow runs on the given cron expression (standard "
+            "five-field syntax, e.g. '0 * * * *' for every hour)."
         ),
     )
+
+    @field_validator("cron")
+    @classmethod
+    def validate_cron(cls, value: str | None) -> str | None:
+        if value is not None and not croniter.is_valid(value):
+            msg = f"invalid cron expression: {value!r}"
+            raise ValueError(msg)
+        return value
 
 
 class ModelConfig(BaseModel):
