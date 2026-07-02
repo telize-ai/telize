@@ -28,7 +28,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 ## ✨ Features
 
 - **YAML workflows** — one file defines `config`, named `models`, flows, and steps
-- **Composable steps** — `input`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
+- **Composable steps** — `input`, `chat`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
 - **Jinja templating** — wire step outputs together with `{{ steps.name.output }}`
 - **Loops and sub-flows** — add `loop` to any step to iterate it over split lists; call nested flows with `uses: flow`
 - **Validated upfront** — Pydantic models catch schema errors before any step runs
@@ -161,7 +161,7 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 
 1. Telize loads your YAML and validates it against typed Pydantic models.
 2. The flow named in `config.entrypoint` runs first.
-3. Each step executes through a registered action (`input`, `llm`, `shell`, …); `llm` steps resolve their `model:` profile from the top-level `models` map.
+3. Each step executes through a registered action (`input`, `chat`, `llm`, `shell`, …); `llm` steps resolve their `model:` profile from the top-level `models` map.
 4. Later steps can reference earlier outputs via Jinja templates.
 5. The CLI prints progress and results as the workflow runs.
 
@@ -240,6 +240,7 @@ Every step also supports:
 | `uses`   | Description                                                                                                                               |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `input`  | Read a `file` or a `directory` (with glob `include`; optional `separator` when joining directory files, default `\n<|separator|>\n`)                   |
+| `chat`   | Pause the workflow and prompt the user in the terminal; optional `message` (supports templates); reply is `{{ steps.<name>.output }}`     |
 | `llm`    | Send a `prompt` using a named `model` from `models`                                                                                       |
 | `shell`  | Run `run` commands; optional `envs` (supports templates)                                                                                  |
 | `python` | Call `call` (`module.function`) with `args`                                                                                               |
@@ -258,6 +259,25 @@ Telize uses [Jinja2](https://jinja.palletsprojects.com/) in step fields.
 Workflow **input** is provided when invoking Telize from the shell (`--input`, `--input-file`, `--input-stdin`) or by a parent `yaml` step's `input` map when running a nested workflow.
 
 With `--input-stdin` or `--input-file`, input may be a YAML/JSON mapping (`{"name": "Ada"}` → `{{ input.name }}`) or **plain text** (`echo Hello` or a `.txt` file → `{{ input.text }}`).
+
+For **interactive prompts mid-workflow**, use `uses: chat` instead of `--input-stdin`. The chat step shows a styled prompt in the terminal and exposes the user's reply as step output. Press Ctrl+C or Ctrl+D to exit cleanly.
+
+Example — ask the user, then call an LLM:
+
+```yaml
+- name: user_chat
+  uses: chat
+  message: What would you like help with today?
+
+- name: respond
+  uses: llm
+  model: default
+  prompt: |
+    The user said:
+    {{ steps.user_chat.output }}
+
+    Reply briefly and helpfully.
+```
 
 Example — chain a shell step into an LLM step:
 
@@ -283,6 +303,7 @@ Example — chain a shell step into an LLM step:
 | [`examples/shell_to_llm.yaml`](examples/shell_to_llm.yaml)       | Shell → LLM with `{{ steps.*.output }}`                  |
 | [`examples/read_file.yaml`](examples/read_file.yaml)             | `uses: input` — single file                              |
 | [`examples/read_directory.yaml`](examples/read_directory.yaml)   | `uses: input` — directory glob                           |
+| [`examples/chat_input.yaml`](examples/chat_input.yaml)           | `uses: chat` — interactive user prompt → LLM             |
 | [`examples/llm_save_output.yaml`](examples/llm_save_output.yaml) | `output_to` — persist step output to disk                |
 | [`examples/llm_loop.yaml`](examples/llm_loop.yaml)               | `loop` — split output and iterate                        |
 | [`examples/call_subflow.yaml`](examples/call_subflow.yaml)       | `uses: flow` — sub-flow in the same file                 |
