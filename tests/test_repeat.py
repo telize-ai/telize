@@ -46,7 +46,7 @@ flows:
 
 
 def test_no_repeat_runs_once(tmp_path: Path) -> None:
-    from tests.test_observer import RecordingObserver
+    from test_observer import RecordingObserver
 
     workflow = tmp_path / "workflow.yaml"
     workflow.write_text(

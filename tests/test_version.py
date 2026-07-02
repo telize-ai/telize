@@ -1,11 +1,18 @@
 import subprocess
 import sys
+import tomllib
+from pathlib import Path
 
 from telize import __version__
 
 
+def _pyproject_version() -> str:
+    data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    return data["project"]["version"]
+
+
 def test_version_constant() -> None:
-    assert __version__ == "0.1.0"
+    assert __version__ == _pyproject_version()
 
 
 def test_cli_version() -> None:
