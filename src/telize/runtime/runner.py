@@ -168,9 +168,7 @@ class WorkflowRunner:
         )
         return self._registry.execute(step, ctx)
 
-    def _run_step_loop(
-        self, step: Step, flow_name: str, state: ExecutionState
-    ) -> StepResult:
+    def _run_step_loop(self, step: Step, flow_name: str, state: ExecutionState) -> StepResult:
         """Run a step once per loop item, exposing each as `{{ item }}`."""
         loop = step.loop
         assert loop is not None
@@ -184,9 +182,7 @@ class WorkflowRunner:
         previous_item = state.loop_item
         try:
             for index, item in enumerate(items, start=1):
-                self._observer.on_step_loop_progress(
-                    flow_name, step, current=index, total=total
-                )
+                self._observer.on_step_loop_progress(flow_name, step, current=index, total=total)
                 state.loop_item = item
                 outputs.append(self._run_step_core(step, state).output)
         finally:

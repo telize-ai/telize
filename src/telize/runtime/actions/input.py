@@ -26,16 +26,12 @@ class InputActionExecutor(ActionExecutor):
             dir_path = resolve_under_base(ctx.base_path, step.directory.path)
             if not dir_path.is_dir():
                 raise ExecutionError(f"input directory not found: {dir_path}")
-            output = _read_directory(
-                dir_path, step.directory.include, step.directory.separator
-            )
+            output = _read_directory(dir_path, step.directory.include, step.directory.separator)
 
         return StepResult(name=step.name, output=output)
 
 
-def _read_directory(
-    directory: Path, include: str, separator: str = "\n<|separator|>\n"
-) -> str:
+def _read_directory(directory: Path, include: str, separator: str = "\n<|separator|>\n") -> str:
     pattern = include if "/" in include or "**" in include else f"**/{include}"
     files = sorted(p for p in directory.glob(pattern) if p.is_file())
     if not files:
