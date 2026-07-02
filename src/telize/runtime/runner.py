@@ -23,7 +23,7 @@ def cron_wait_seconds(cron_expr: str, *, now: datetime | None = None) -> float:
     """Return how long to wait until the next cron occurrence after ``now``."""
     base = now or datetime.now()
     next_run = croniter(cron_expr, base).get_next(datetime)
-    return max(0.0, (next_run - base).total_seconds())
+    return max(0.0, float((next_run - base).total_seconds()))
 
 
 def entrypoint_output(spec: WorkflowSpec, state: ExecutionState) -> str:
