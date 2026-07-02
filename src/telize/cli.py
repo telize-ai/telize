@@ -8,10 +8,11 @@ from rich.console import Console
 
 from telize import __version__
 from telize.config import load_spec
-from telize.console import RichConsoleObserver, print_validation_ok
+from telize.console import RichConsoleObserver, get_console, print_validation_ok
 from telize.exceptions import ConfigError, ExecutionError, TelizeError
 from telize.runtime import WorkflowRunner
 from telize.runtime.workflow_input import resolve_cli_workflow_input
+from telize.scaffold import create_starter_project
 
 _ERR_CONSOLE = Console(stderr=True)
 
@@ -64,6 +65,14 @@ def build_parser() -> argparse.ArgumentParser:
             "(exposed as {{ input.text }})."
         ),
     )
+    parser.add_argument(
+        "--init",
+        metavar="FLOW_NAME",
+        help=(
+            "Create a starter workflow (<flow_name>.yaml), README.md, and scripts/ "
+            "in the current directory (no LLM required)."
+        ),
+    )
     return parser
 
 
@@ -71,9 +80,33 @@ def _print_error(message: str) -> None:
     _ERR_CONSOLE.print(f"[bold red]error[/]: {message}")
 
 
+def _run_init(flow_name: str) -> None:
+    result = create_starter_project(flow_name)
+    console = get_console()
+    console.print("[bold green]Created starter workflow[/]")
+    console.print(f"  [cyan]{result.workflow.name}[/]")
+    console.print(f"  [cyan]{result.readme.name}[/]")
+    console.print(f"  [cyan]{result.process_module.relative_to(result.workflow.parent)}[/]")
+    console.print()
+    console.print("Next steps:")
+    console.print(f"  telize -f {result.workflow.name}")
+    console.print(f"  telize -f {result.workflow.name} --validate-only")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.init is not None:
+        if args.file is not None:
+            _print_error("cannot use --init together with -f/--file")
+            sys.exit(1)
+        try:
+            _run_init(args.init)
+        except ConfigError as exc:
+            _print_error(str(exc))
+            sys.exit(1)
+        sys.exit(0)
 
     if args.file is None:
         parser.print_help()

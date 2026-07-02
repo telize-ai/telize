@@ -16,6 +16,8 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - [🧩 Requirements](#-requirements)
 - [📦 Installation](#-installation)
 - [⚡ Quick start](#-quick-start)
+  - [Scaffold a starter project (no LLM)](#scaffold-a-starter-project-no-llm)
+  - [LLM quick start](#llm-quick-start)
 - [🚀 Motivation](#-motivation)
 - [⚙️ How it works](#-how-it-works)
 - [📚 Workflow reference](#-workflow-reference)
@@ -64,6 +66,19 @@ telize --version
 ```
 
 ## ⚡ Quick start
+
+### Scaffold a starter project (no LLM)
+
+Create a minimal workflow you can run immediately — shell plus Python, no API keys or local models:
+
+```bash
+telize --init my_flow
+telize -f my_flow.yaml
+```
+
+This writes `my_flow.yaml`, a project `README.md`, and a `scripts/` directory with a sample `process.py` helper. Telize resolves `scripts.*` imports from the workflow file's directory.
+
+### LLM quick start
 
 **1.** For local models, start [Ollama](https://ollama.com/) and pull a model:
 
@@ -327,13 +342,21 @@ Example — chain a shell step into an LLM step:
 
 ```
 usage: telize [-h] [--version] [-f FILE] [--validate-only]
+              [--input KEY=VALUE] [--input-file FILE] [--input-stdin]
+              [--init FLOW_NAME]
 
 options:
-  -h, --help         show help
-  --version          show version
-  -f, --file FILE    path to workflow YAML
-  --validate-only    parse and validate without running steps
+  -h, --help            show help
+  --version             show version
+  -f, --file FILE       path to workflow YAML
+  --validate-only       parse and validate without running steps
+  --input KEY=VALUE     workflow input (repeatable)
+  --input-file FILE     workflow input from a file
+  --input-stdin         read workflow input from stdin
+  --init FLOW_NAME      create a starter workflow and scripts/ in the current directory
 ```
+
+`telize --init <flow_name>` scaffolds `<flow_name>.yaml`, a project `README.md`, and `scripts/process.py`. The generated flow chains two shell steps around a Python function — useful for trying Telize before configuring LLMs.
 
 ## 🛠️ Development
 
