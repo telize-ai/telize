@@ -30,7 +30,7 @@ flows:
 
     state = WorkflowRunner(load_spec(workflow), workflow).run()
     output = state.steps["load"].output
-    assert "## a.md\n\nalpha\n<|separator|>\n## b.md\n\nbeta" == output
+    assert output == "## a.md\n\nalpha\n<|separator|>\n## b.md\n\nbeta"
 
 
 def test_directory_input_custom_separator(tmp_path: Path) -> None:
@@ -58,4 +58,4 @@ flows:
 
     state = WorkflowRunner(load_spec(workflow), workflow).run()
     output = state.steps["load"].output
-    assert "## a.md\n\nalpha===## b.md\n\nbeta" == output
+    assert output == "## a.md\n\nalpha===## b.md\n\nbeta"
