@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from telize.config.models.actions import FlowRefStep, LlmStep, Step
+from telize.config.models.actions import FlowRefStep, LlmStep, Step, TextSearchStep
 from telize.config.models.config import GlobalConfig, ModelConfig
 from telize.config.models.flow import Flow
 
@@ -40,10 +40,12 @@ class WorkflowSpec(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_llm_model_references(self) -> WorkflowSpec:
+    def validate_model_references(self) -> WorkflowSpec:
         for flow_name, flow in self.flows.items():
             for step in flow.steps:
-                if isinstance(step, LlmStep) and step.model not in self.models:
+                if not isinstance(step, (LlmStep, TextSearchStep)):
+                    continue
+                if step.model not in self.models:
                     known = ", ".join(sorted(self.models)) or "(none)"
                     msg = (
                         f"flow '{flow_name}' step '{step.name}' references unknown model "

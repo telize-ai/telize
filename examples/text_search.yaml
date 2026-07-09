@@ -1,0 +1,29 @@
+# Semantic search over local files with ChromaDB and local embedding models.
+#
+#   telize -f examples/text_search.yaml
+#
+# Uses fastembed (ONNX) — no API, no LangChain. The model is downloaded on first run.
+
+config:
+  entrypoint: main
+
+models:
+  my_rag_model_embeddings:
+    provider: local
+    model: sentence-transformers/all-MiniLM-L6-v2
+
+flows:
+  main:
+    steps:
+      - name: search_local
+        uses: text_search
+        path: ./data/files
+        ttl: 3600
+        model: my_rag_model_embeddings
+        search: "project X"
+        top_k: 5
+        # min_score: 0.5
+        # chunk_size: 1000
+        # chunk_overlap: 200
+        # semantic_threshold: 0.5
+        # include: "*.md"

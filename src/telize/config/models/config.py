@@ -37,10 +37,17 @@ class ModelConfig(BaseModel):
 
     provider: str = Field(
         default="openai",
-        description="Registered LLM provider id (default: openai).",
+        description=(
+            "Registered provider id. Use `openai` for LLM chat steps; "
+            "use `local` for embedding models on `text_search` steps."
+        ),
     )
     model: str = Field(
-        description="Model id passed to the provider (e.g. 'gpt-4o-mini' or 'qwen3.5:4b').",
+        description=(
+            "Model id passed to the provider. For LLM steps: chat model name "
+            "(e.g. 'gpt-4o-mini'). For local embedding steps: HuggingFace model id "
+            "(e.g. 'sentence-transformers/all-MiniLM-L6-v2')."
+        ),
     )
     temperature: float | None = Field(
         default=None,
@@ -65,4 +72,11 @@ class ModelConfig(BaseModel):
     system_prompt: str | None = Field(
         default=None,
         description="System message for llm steps using this model (Jinja-templated at runtime).",
+    )
+    thinking: bool = Field(
+        default=True,
+        description=(
+            "Enable reasoning/thinking for capable models (e.g. qwen3.5). "
+            "When false, sends reasoning_effort=none to the API."
+        ),
     )

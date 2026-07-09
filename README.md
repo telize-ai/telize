@@ -189,7 +189,7 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 | Key      | Description                                                         |
 | -------- | ------------------------------------------------------------------- |
 | `config` | Global settings: `entrypoint` (which flow runs first)               |
-| `models` | Named LLM profiles; referenced by `model:` on each `uses: llm` step |
+| `models` | Named LLM/embedding profiles; referenced by `model:` on `llm` and `text_search` steps |
 | `flows`  | Named flows; `config.entrypoint` must match one of these keys       |
 
 ### ⚙️ `config`
@@ -219,6 +219,7 @@ Each key under `models` is a profile name (for example `default`, `creative`). L
 | `api_url`       | no (default `http://localhost:11434`) | OpenAI-compatible API base URL (`/v1` is appended automatically)                |
 | `api_key`       | no                                    | API key; use `{{ env.OPENAI_API_KEY }}` or rely on the `OPENAI_API_KEY` env var |
 | `system_prompt` | no                                    | System message for steps using this profile (Jinja at runtime)                  |
+| `thinking`      | no (default `true`)                   | Enable reasoning/thinking for capable models; set `false` to disable            |
 
 Example — multiple profiles:
 
@@ -271,6 +272,44 @@ Every step also supports:
 | `python` | Call `call` (`module.function`) with `args`                                                                                               |
 | `flow`   | Run another flow via `run`                                                                                                                |
 | `yaml`   | Run an external workflow from `file` (own `config`, `models`, and `flows`); optional `input` map passed to the child as `{{ input.key }}` |
+| `text_search` | Semantic search over a `path` directory with ChromaDB (in-process); uses an embedding `model`, `search` query, and optional RAG tuning fields |
+
+#### `text_search` (RAG)
+
+Indexes files under `path` into an in-process ChromaDB store at `.cache/<step_name>.db` (next to the workflow YAML). Rebuilds the index when `ttl` expires or when source files change.
+
+| Field | Default | Description |
+| ----- | ------- | ----------- |
+| `path` | — | Directory to index (relative to the workflow file) |
+| `model` | — | Local embedding model from `models` (`provider: local`) |
+| `search` | — | Search query (Jinja-templated) |
+| `ttl` | `3600` | Seconds before the index is rebuilt |
+| `include` | `*` | Glob pattern for files within `path` |
+| `top_k` | `5` | Maximum number of chunks to return |
+| `min_score` | — | Optional minimum cosine similarity (0–1) |
+| `chunk_size` | `1000` | Target max characters per semantic chunk |
+| `chunk_overlap` | `200` | Character overlap between chunks |
+| `semantic_threshold` | `0.5` | Break chunks when consecutive sentence similarity drops below this |
+
+Example:
+
+```yaml
+models:
+  my_rag_model_embeddings:
+    provider: local
+    model: sentence-transformers/all-MiniLM-L6-v2
+
+- name: search_local
+  uses: text_search
+  path: data/files
+  ttl: 3600
+  model: my_rag_model_embeddings
+  search: "project X"
+```
+
+Embedding models use `provider: local` and run in-process via [fastembed](https://github.com/qdrant/fastembed) (ONNX). Any supported HuggingFace model id works; the default `sentence-transformers/all-MiniLM-L6-v2` is small and fast. The model is cached after the first download.
+
+See [`examples/text_search.yaml`](examples/text_search.yaml).
 
 ### 🧩 Templating
 
@@ -334,6 +373,7 @@ Example — chain a shell step into an LLM step:
 | [`examples/call_subflow.yaml`](examples/call_subflow.yaml)       | `uses: flow` — sub-flow in the same file                 |
 | [`examples/nested_workflow.yaml`](examples/nested_workflow.yaml) | `uses: yaml` — external workflow + `input`               |
 | [`examples/python_step.yaml`](examples/python_step.yaml)         | `uses: python` — call a Python function                  |
+| [`examples/text_search.yaml`](examples/text_search.yaml)         | `uses: text_search` — semantic RAG search over local files |
 | [`examples/multi_model.yaml`](examples/multi_model.yaml)         | Multiple named `models` profiles                         |
 | [`examples/shell_with_env.yaml`](examples/shell_with_env.yaml)   | Shell `envs` and load-time `{{ env.* }}`                 |
 | [`examples/env_config.yaml`](examples/env_config.yaml)           | `{{ env.VAR }}` in the `models` section at load time     |

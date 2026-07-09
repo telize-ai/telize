@@ -7,6 +7,7 @@ from telize.config.models.actions import (
     PythonStep,
     ShellStep,
     Step,
+    TextSearchStep,
     YamlStep,
 )
 from telize.config.models.config import GlobalConfig, ModelConfig
@@ -25,6 +26,7 @@ __all__ = [
     "PythonStep",
     "ShellStep",
     "Step",
+    "TextSearchStep",
     "WorkflowSpec",
     "YamlStep",
 ]

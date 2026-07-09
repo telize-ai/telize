@@ -41,10 +41,13 @@ class OpenAILLMClient:
         client: OpenAI,
         model: str,
         temperature: float | None = None,
+        *,
+        thinking: bool = True,
     ) -> None:
         self._client = client
         self._model = model
         self._temperature = temperature
+        self._thinking = thinking
 
     @classmethod
     def from_config(cls, model_config: ModelConfig) -> OpenAILLMClient:
@@ -55,6 +58,7 @@ class OpenAILLMClient:
             ),
             model=model_config.model,
             temperature=model_config.temperature,
+            thinking=model_config.thinking,
         )
 
     @classmethod
@@ -65,6 +69,7 @@ class OpenAILLMClient:
         api_key: str,
         model: str,
         temperature: float | None = None,
+        thinking: bool = True,
         http_client: httpx.Client | None = None,
     ) -> OpenAILLMClient:
         """Build a client with explicit parameters (used in tests)."""
@@ -73,7 +78,7 @@ class OpenAILLMClient:
             api_key=api_key,
             http_client=http_client,
         )
-        return cls(client=client, model=model, temperature=temperature)
+        return cls(client=client, model=model, temperature=temperature, thinking=thinking)
 
     def chat(self, prompt: str, *, system: str | None = None) -> str:
         messages: list[ChatCompletionMessageParam] = []
@@ -81,18 +86,17 @@ class OpenAILLMClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
+        create_kwargs: dict[str, object] = {
+            "model": self._model,
+            "messages": messages,
+        }
+        if self._temperature is not None:
+            create_kwargs["temperature"] = self._temperature
+        if not self._thinking:
+            create_kwargs["reasoning_effort"] = "none"
+
         try:
-            if self._temperature is not None:
-                response = self._client.chat.completions.create(
-                    model=self._model,
-                    messages=messages,
-                    temperature=self._temperature,
-                )
-            else:
-                response = self._client.chat.completions.create(
-                    model=self._model,
-                    messages=messages,
-                )
+            response = self._client.chat.completions.create(**create_kwargs)
         except APIStatusError as exc:
             detail = exc.message or str(exc)
             raise ExecutionError(f"LLM API returned HTTP {exc.status_code}: {detail}") from exc

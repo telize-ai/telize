@@ -21,6 +21,7 @@ ACTION_LABELS: dict[str, tuple[str, str]] = {
     "chat": ("CHAT", "bold #a371f7"),
     "flow": ("FLOW", "bold red"),
     "yaml": ("YAML", "bold blue"),
+    "text_search": ("SEARCH", "bold bright_blue"),
 }
 
 
@@ -146,6 +147,7 @@ def _panel_border(uses: str) -> str:
         "chat": "#a371f7",
         "flow": "red",
         "yaml": "blue",
+        "text_search": "bright_blue",
     }.get(uses, "white")
 
 

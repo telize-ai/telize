@@ -115,6 +115,62 @@ def test_openai_provider_registered() -> None:
     assert "openai" in registered_providers()
 
 
+def test_model_config_thinking_defaults_true() -> None:
+    model_config = ModelConfig(provider="openai", model="m")
+    assert model_config.thinking is True
+
+
+def test_chat_thinking_disabled_sends_reasoning_effort_none() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        assert payload["reasoning_effort"] == "none"
+        assert "temperature" not in payload
+        return httpx.Response(200, json=_chat_completion_response("Fast reply"))
+
+    transport = httpx.MockTransport(handler)
+    http_client = httpx.Client(transport=transport, base_url="http://llm.test")
+    client = OpenAILLMClient.from_params(
+        base_url="http://llm.test",
+        api_key="test",
+        model="qwen3.5:4b",
+        thinking=False,
+        http_client=http_client,
+    )
+    assert client.chat("Hello") == "Fast reply"
+    client.close()
+
+
+def test_chat_thinking_enabled_omits_reasoning_effort() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        assert "reasoning_effort" not in payload
+        return httpx.Response(200, json=_chat_completion_response("Thoughtful reply"))
+
+    transport = httpx.MockTransport(handler)
+    http_client = httpx.Client(transport=transport, base_url="http://llm.test")
+    client = OpenAILLMClient.from_params(
+        base_url="http://llm.test",
+        api_key="test",
+        model="qwen3.5:4b",
+        thinking=True,
+        http_client=http_client,
+    )
+    assert client.chat("Hello") == "Thoughtful reply"
+    client.close()
+
+
+def test_from_config_passes_thinking() -> None:
+    model_config = ModelConfig(
+        provider="openai",
+        model="qwen3.5:4b",
+        api_url="http://llm.test",
+        thinking=False,
+    )
+    client = OpenAILLMClient.from_config(model_config)
+    assert client._thinking is False
+    client.close()
+
+
 def test_register_custom_provider() -> None:
     class StubClient:
         def chat(self, prompt: str, *, system: str | None = None) -> str:

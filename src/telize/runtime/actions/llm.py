@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from telize.config.models import LlmStep, ModelConfig, Step
+from telize.config.models import LlmStep, ModelConfig, Step, TextSearchStep
 from telize.exceptions import ExecutionError
 from telize.providers import get_llm_client
 from telize.runtime.actions.base import ActionContext, ActionExecutor
 from telize.runtime.state import StepResult
 
 
-def resolve_model_config(ctx: ActionContext, step: LlmStep) -> ModelConfig:
+def resolve_model_config(ctx: ActionContext, step: LlmStep | TextSearchStep) -> ModelConfig:
     """Look up the model definition referenced by an llm step."""
     try:
         return ctx.state.models[step.model]

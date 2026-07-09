@@ -15,6 +15,7 @@ def test_load_hello_agent_fixture() -> None:
     assert spec.models["default"].api_url == "http://localhost:11434"
     assert spec.models["default"].model == "qwen3.5:4b"
     assert spec.models["default"].system_prompt == "You are a helpful assistant."
+    assert spec.models["default"].thinking is True
     assert "release_pipeline" in spec.flows
     assert "risk_assessment_swarm" in spec.flows
 
@@ -77,3 +78,29 @@ flows:
     )
     with pytest.raises(ConfigError, match="unknown model"):
         load_spec(path)
+
+
+def test_model_thinking_from_yaml(tmp_path: Path) -> None:
+    path = tmp_path / "workflow.yaml"
+    path.write_text(
+        """
+config:
+  entrypoint: main
+models:
+  default:
+    provider: openai
+    model: m
+    api_url: http://localhost:11434
+    thinking: false
+flows:
+  main:
+    steps:
+      - name: a
+        uses: llm
+        model: default
+        prompt: hi
+""",
+        encoding="utf-8",
+    )
+    spec = load_spec(path)
+    assert spec.models["default"].thinking is False

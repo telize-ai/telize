@@ -8,6 +8,7 @@ from telize.runtime.actions.input import InputActionExecutor
 from telize.runtime.actions.llm import LlmActionExecutor
 from telize.runtime.actions.python import PythonActionExecutor
 from telize.runtime.actions.shell import ShellActionExecutor
+from telize.runtime.actions.text_search import TextSearchActionExecutor
 from telize.runtime.actions.yaml import YamlActionExecutor
 from telize.runtime.state import StepResult
 
@@ -36,6 +37,7 @@ def default_registry() -> ActionRegistry:
         LlmActionExecutor(),
         ShellActionExecutor(),
         PythonActionExecutor(),
+        TextSearchActionExecutor(),
         YamlActionExecutor(),
     ):
         registry.register(executor)

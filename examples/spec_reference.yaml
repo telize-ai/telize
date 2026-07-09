@@ -28,6 +28,7 @@ models:
     api_url: http://localhost:11434
     # api_key: "{{ env.OPENAI_API_KEY }}"  # load-time env; omit for local Ollama
     system_prompt: You are a helpful assistant.
+    # thinking: true                    # default; set false to disable reasoning
 
   creative:
     provider: openai

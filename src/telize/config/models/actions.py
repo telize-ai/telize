@@ -142,7 +142,67 @@ class YamlStep(_StepBase):
     )
 
 
+class TextSearchStep(_StepBase):
+    """Semantic search over files in a directory using ChromaDB and embedding models."""
+
+    uses: Literal["text_search"] = "text_search"
+    path: str = Field(description="Directory to index (relative to the workflow file).")
+    model: str = Field(
+        description="Name of a local embedding model defined in the top-level `models` mapping.",
+    )
+    search: str = Field(description="Search query (Jinja-templated).")
+    ttl: int = Field(
+        default=3600,
+        ge=0,
+        description=(
+            "Seconds before the index is rebuilt. Reindex also runs when source "
+            "files change (by modification time)."
+        ),
+    )
+    include: str = Field(
+        default="*",
+        description="Glob pattern for files to index within `path`.",
+    )
+    top_k: int = Field(
+        default=5,
+        ge=1,
+        description="Maximum number of matching chunks to return.",
+    )
+    min_score: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Optional minimum cosine similarity (0-1); results below are dropped.",
+    )
+    chunk_size: int = Field(
+        default=1000,
+        ge=100,
+        description="Target maximum characters per chunk during semantic splitting.",
+    )
+    chunk_overlap: int = Field(
+        default=200,
+        ge=0,
+        description="Character overlap between consecutive chunks.",
+    )
+    semantic_threshold: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Cosine similarity threshold for semantic chunk boundaries; lower values "
+            "produce more, smaller chunks."
+        ),
+    )
+
+
 Step = Annotated[
-    InputStep | LlmStep | ShellStep | PythonStep | FlowRefStep | ChatStep | YamlStep,
+    InputStep
+    | LlmStep
+    | ShellStep
+    | PythonStep
+    | FlowRefStep
+    | ChatStep
+    | YamlStep
+    | TextSearchStep,
     Field(discriminator="uses"),
 ]
