@@ -1,6 +1,6 @@
 [project]
 name = "telize"
-version = "0.3.2"
+version = "0.3.3"
 description = "Automate with flows, not loose prompts. Chain LLM, shell, and code in one YAML pipeline."
 readme = "README.md"
 license = "Apache-2.0"
