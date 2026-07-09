@@ -86,17 +86,31 @@ class OpenAILLMClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        create_kwargs: dict[str, object] = {
-            "model": self._model,
-            "messages": messages,
-        }
-        if self._temperature is not None:
-            create_kwargs["temperature"] = self._temperature
-        if not self._thinking:
-            create_kwargs["reasoning_effort"] = "none"
-
         try:
-            response = self._client.chat.completions.create(**create_kwargs)
+            if self._temperature is not None and not self._thinking:
+                response = self._client.chat.completions.create(
+                    model=self._model,
+                    messages=messages,
+                    temperature=self._temperature,
+                    reasoning_effort="none",
+                )
+            elif self._temperature is not None:
+                response = self._client.chat.completions.create(
+                    model=self._model,
+                    messages=messages,
+                    temperature=self._temperature,
+                )
+            elif not self._thinking:
+                response = self._client.chat.completions.create(
+                    model=self._model,
+                    messages=messages,
+                    reasoning_effort="none",
+                )
+            else:
+                response = self._client.chat.completions.create(
+                    model=self._model,
+                    messages=messages,
+                )
         except APIStatusError as exc:
             detail = exc.message or str(exc)
             raise ExecutionError(f"LLM API returned HTTP {exc.status_code}: {detail}") from exc
