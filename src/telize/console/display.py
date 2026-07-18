@@ -126,6 +126,7 @@ def _build_step_panel(result: StepResult, *, index: int) -> Panel:
         subtitle_parts.append(f"→ {result.output_path}")
     subtitle = "  ".join(subtitle_parts)
 
+    body: Markdown | Syntax | Text
     if result.skipped:
         body = Text("skipped (when condition was false)", style="dim")
     elif result.output:
