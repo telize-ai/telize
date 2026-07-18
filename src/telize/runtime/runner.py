@@ -145,6 +145,20 @@ class WorkflowRunner:
         self._step_counter += 1
         index = self._step_counter
 
+        if step.when is not None:
+            renderer = TemplateRenderer(build_template_context(state))
+            if not renderer.evaluate(step.when):
+                result = StepResult(
+                    name=step.name,
+                    output="",
+                    uses=step.uses,
+                    flow_name=flow_name,
+                    skipped=True,
+                )
+                state.set_step(result)
+                self._observer.on_step_skipped(flow_name, step, result, index=index)
+                return result.output
+
         self._observer.on_step_start(flow_name, step, index=index)
         try:
             if step.loop is None:

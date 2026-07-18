@@ -110,6 +110,26 @@ flows:
         load_spec(path)
 
 
+def test_when_field_loaded(tmp_path: Path) -> None:
+    path = tmp_path / "workflow.yaml"
+    path.write_text(
+        """
+config:
+  entrypoint: main
+flows:
+  main:
+    steps:
+      - name: conditional
+        uses: shell
+        when: "{{ 'x' in steps.prior.output }}"
+        run: echo ok
+""",
+        encoding="utf-8",
+    )
+    spec = load_spec(path)
+    assert spec.flows["main"].steps[0].when == "{{ 'x' in steps.prior.output }}"
+
+
 def test_model_thinking_from_yaml(tmp_path: Path) -> None:
     path = tmp_path / "workflow.yaml"
     path.write_text(

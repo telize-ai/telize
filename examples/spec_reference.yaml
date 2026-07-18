@@ -105,8 +105,10 @@ flows:
           Create 2 social hashtags for this topic: {{ item }}
 
       # uses: shell — run commands; stdout becomes steps.<name>.output
+      # Optional when: Jinja condition; false skips the step (empty output).
       - name: run_system_checks
         uses: shell
+        # when: "{{ 'ship' in steps.generate_marketing_copy.output }}"
         run: |
           echo "Starting build check..."
           python --version

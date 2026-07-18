@@ -37,6 +37,11 @@ class RecordingObserver:
     def on_step_complete(self, flow_name: str, step: Step, result: StepResult) -> None:
         self.events.append(f"step_done:{step.name}")
 
+    def on_step_skipped(
+        self, flow_name: str, step: Step, result: StepResult, *, index: int
+    ) -> None:
+        self.events.append(f"step_skipped:{step.name}:{index}")
+
     def on_step_error(self, flow_name: str, step: Step, error: BaseException) -> None:
         self.events.append(f"step_err:{step.name}")
 
@@ -82,3 +87,29 @@ def test_observer_events_on_minimal_run() -> None:
     assert "step_start:main:greet:shell" in observer.events
     assert "step_done:greet" in observer.events
     assert observer.events[-1] == "workflow_done"
+
+
+def test_observer_skipped_when_false(tmp_path: Path) -> None:
+    workflow = tmp_path / "workflow.yaml"
+    workflow.write_text(
+        """
+config:
+  entrypoint: main
+flows:
+  main:
+    steps:
+      - name: seed
+        uses: shell
+        run: echo "alpha"
+      - name: skipped
+        uses: shell
+        when: "{{ 'beta' in steps.seed.output }}"
+        run: echo "nope"
+""",
+        encoding="utf-8",
+    )
+    observer = RecordingObserver()
+    WorkflowRunner(load_spec(workflow), workflow, observer=observer).run()
+    assert "step_start:main:skipped:shell" not in observer.events
+    assert "step_skipped:skipped:2" in observer.events
+    assert "step_done:seed" in observer.events

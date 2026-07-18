@@ -1,0 +1,29 @@
+# Skip steps unless a prior output matches a Jinja `when` condition.
+#
+# Run:
+#   telize -f examples/when_condition.yaml
+
+config:
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: classify
+        uses: shell
+        run: echo "status=ready keyword=ship-it"
+
+      - name: on_match
+        uses: shell
+        when: "{{ 'keyword=ship-it' in steps.classify.output }}"
+        run: echo "matched - running follow-up"
+
+      - name: on_miss
+        uses: shell
+        when: "{{ 'keyword=hold' in steps.classify.output }}"
+        run: echo "this step is skipped"
+
+      - name: on_not_in
+        uses: shell
+        when: "{{ 'keyword=hold' not in steps.classify.output }}"
+        run: echo "not-in also runs"

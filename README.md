@@ -32,6 +32,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - **YAML workflows** — one file defines `config`, named `models`, flows, and steps
 - **Composable steps** — `input`, `chat`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
 - **Jinja templating** — wire step outputs together with `{{ steps.name.output }}`, and reuse constants via `{{ vars.name }}`
+- **Conditional steps** — skip a step with `when: "{{ ... }}"` (Jinja boolean expression)
 - **Loops and sub-flows** — add `loop` to any step to iterate it over split lists; call nested flows with `uses: flow`
 - **Validated upfront** — Pydantic models catch schema errors before any step runs
 - **Rich CLI output** — progress, step panels, and errors in the terminal
@@ -294,6 +295,7 @@ Every step also supports:
 | `name`       | Unique id within the flow; referenced as `{{ steps.<name>.output }}`        |
 | `output_to`  | Optional path (relative to the workflow file); raw step output is written when the step finishes |
 | `loop`       | Optional; run the step once per item (`items` split by `split_by`, default `\n<|separator|>\n`), exposing each as `{{ item }}` and joining outputs with `separator` (default `\n<|separator|>\n`) |
+| `when`       | Optional Jinja condition; the step runs only when it evaluates to true (e.g. `{{ 'keyword' in steps.prior.output }}`). Skipped steps record empty output and `steps.<name>.skipped` is `true`. |
 
 ### 🪜 Steps (`uses`)
 
@@ -352,7 +354,7 @@ Telize uses [Jinja2](https://jinja.palletsprojects.com/) in step fields.
 | When          | What you can use                                                                                           |
 | ------------- | ---------------------------------------------------------------------------------------------------------- |
 | **Load time** | `{{ env.VAR }}` — expanded when the file is parsed                                                         |
-| **Runtime**   | `{{ vars.<name> }}`, `{{ steps.<name>.output }}`, `{{ models.<name>.model }}`, `{{ input.<key> }}`, `{{ item }}` (inside loops) |
+| **Runtime**   | `{{ vars.<name> }}`, `{{ steps.<name>.output }}`, `{{ steps.<name>.skipped }}`, `{{ models.<name>.model }}`, `{{ input.<key> }}`, `{{ item }}` (inside loops) |
 
 Workflow **input** is provided when invoking Telize from the shell (`--input`, `--input-file`, `--input-stdin`) or by a parent `yaml` step's `input` map when running a nested workflow.
 
@@ -392,6 +394,24 @@ Example — chain a shell step into an LLM step:
     {{ steps.fetch_data.output }}
 ```
 
+Example — run a step only when a prior output matches:
+
+```yaml
+- name: classify
+  uses: shell
+  run: echo "status=ready keyword=ship-it"
+
+- name: on_match
+  uses: shell
+  when: "{{ 'keyword=ship-it' in steps.classify.output }}"
+  run: echo "matched"
+
+- name: on_miss
+  uses: shell
+  when: "{{ 'keyword=hold' not in steps.classify.output }}"
+  run: echo "also runs when hold is absent"
+```
+
 ## 🧪 Examples
 
 | File                                                             | What it demonstrates                                     |
@@ -404,6 +424,7 @@ Example — chain a shell step into an LLM step:
 | [`examples/chat_input.yaml`](examples/chat_input.yaml)           | `uses: chat` — interactive user prompt → LLM             |
 | [`examples/llm_save_output.yaml`](examples/llm_save_output.yaml) | `output_to` — persist step output to disk                |
 | [`examples/llm_loop.yaml`](examples/llm_loop.yaml)               | `loop` — split output and iterate                        |
+| [`examples/when_condition.yaml`](examples/when_condition.yaml)   | `when` — skip steps with Jinja conditions                |
 | [`examples/vars_loop.yaml`](examples/vars_loop.yaml)             | Top-level `vars` with `{{ vars.* }}` in a loop           |
 | [`examples/call_subflow.yaml`](examples/call_subflow.yaml)       | `uses: flow` — sub-flow in the same file                 |
 | [`examples/nested_workflow.yaml`](examples/nested_workflow.yaml) | `uses: yaml` — external workflow + `input`               |

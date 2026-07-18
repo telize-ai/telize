@@ -56,6 +56,13 @@ class _StepBase(BaseModel):
             "current value as `{{ item }}` and joining outputs with `separator`."
         ),
     )
+    when: str | None = Field(
+        default=None,
+        description=(
+            "Optional Jinja condition; the step runs only when it evaluates to true "
+            "(e.g. `{{ 'keyword' in steps.prior.output }}`)."
+        ),
+    )
 
 
 class InputStep(_StepBase):

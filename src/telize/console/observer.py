@@ -82,6 +82,22 @@ class RichConsoleObserver:
         print_step_panel(result, index=index)
         self._console.print()
 
+    def on_step_skipped(
+        self, flow_name: str, step: Step, result: StepResult, *, index: int
+    ) -> None:
+        if self._status is not None:
+            self._status.stop()
+            self._status = None
+
+        self._completed += 1
+        self._step_indices[f"{flow_name}:{step.name}"] = index
+        if not result.uses:
+            result.uses = step.uses
+        if not result.flow_name:
+            result.flow_name = flow_name
+        print_step_panel(result, index=index)
+        self._console.print()
+
     def _step_status_text(
         self,
         step: Step,

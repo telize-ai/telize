@@ -116,6 +116,8 @@ def _build_step_panel(result: StepResult, *, index: int) -> Panel:
     title.append(f"{index:02d} ", style="dim")
     title.append(f"{result.name} ", style="bold")
     title.append(label, style=style)
+    if result.skipped:
+        title.append("  SKIPPED", style="bold yellow")
     if result.flow_name:
         title.append(f"  ·  {result.flow_name}", style="dim")
 
@@ -124,7 +126,9 @@ def _build_step_panel(result: StepResult, *, index: int) -> Panel:
         subtitle_parts.append(f"→ {result.output_path}")
     subtitle = "  ".join(subtitle_parts)
 
-    if result.output:
+    if result.skipped:
+        body = Text("skipped (when condition was false)", style="dim")
+    elif result.output:
         body = _render_step_body(result.output, uses)
     else:
         body = Text("(no output)", style="dim")
@@ -133,7 +137,7 @@ def _build_step_panel(result: StepResult, *, index: int) -> Panel:
         body,
         title=title,
         subtitle=subtitle if subtitle else None,
-        border_style=_panel_border(uses),
+        border_style="yellow" if result.skipped else _panel_border(uses),
         padding=(1, 2),
     )
 

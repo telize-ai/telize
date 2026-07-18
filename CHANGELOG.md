@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Step-level `when` Jinja condition; false skips the step (empty output, `steps.<name>.skipped`)
+
 ## [0.3.4] - 2026-07-18
 
 ### Added

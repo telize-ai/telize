@@ -16,6 +16,7 @@ class StepResult:
     output_path: Path | None = None
     uses: str = ""
     flow_name: str = ""
+    skipped: bool = False
 
 
 @dataclass
@@ -44,6 +45,7 @@ class ExecutionState:
                 "name": name,
                 "output": result.output,
                 "output_path": str(result.output_path) if result.output_path else None,
+                "skipped": result.skipped,
             }
             for name, result in self.steps.items()
         }
