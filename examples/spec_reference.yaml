@@ -15,9 +15,17 @@
 config:
   # entrypoint — name of the flow that runs when you execute this file
   entrypoint: release_pipeline
+  # repeat — how many times to run the full workflow (default 0 = once).
+  # With repeat: 3, the entrypoint and any flows it reaches run 3 times.
+  # repeat: 3
   # cron — optional; omit or null to run once. When set, reruns on the schedule
   # after each run finishes (standard five-field cron syntax).
   # cron: "0 * * * *"
+
+# vars — optional workflow constants; use as {{ vars.<name> }} in templates
+vars:
+  product_name: Telize
+  # hosts: "192.168.0.1, 192.168.0.2"  # handy with loop + split_by
 
 # models — named LLM profiles referenced by `model:` on llm steps
 models:

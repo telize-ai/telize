@@ -36,6 +36,36 @@ def test_loop_config_default_split_by() -> None:
     assert loop.separator == "\n<|separator|>\n"
 
 
+def test_vars_default_empty() -> None:
+    spec = load_spec(HELLO_AGENT)
+    assert spec.vars == {}
+
+
+def test_vars_loaded_from_yaml(tmp_path: Path) -> None:
+    path = tmp_path / "workflow.yaml"
+    path.write_text(
+        """
+config:
+  entrypoint: main
+vars:
+  hosts: "192.168.0.1, 192.168.0.2"
+  retry: true
+  count: 3
+flows:
+  main:
+    steps:
+      - name: noop
+        uses: shell
+        run: echo ok
+""",
+        encoding="utf-8",
+    )
+    spec = load_spec(path)
+    assert spec.vars["hosts"] == "192.168.0.1, 192.168.0.2"
+    assert spec.vars["retry"] is True
+    assert spec.vars["count"] == 3
+
+
 def test_llm_step_fields() -> None:
     spec = load_spec(HELLO_AGENT)
     hashtags = spec.flows["release_pipeline"].steps[5]

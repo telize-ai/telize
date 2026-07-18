@@ -21,6 +21,7 @@ def build_template_context(
         "models": {
             name: model.model_dump(exclude_none=True) for name, model in state.models.items()
         },
+        "vars": dict(state.vars),
         "input": dict(state.workflow_input),
     }
     effective_item = item if item is not None else state.loop_item

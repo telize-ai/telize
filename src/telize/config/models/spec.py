@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from telize.config.models.actions import FlowRefStep, LlmStep, Step, TextSearchStep
@@ -14,6 +16,7 @@ class WorkflowSpec(BaseModel):
 
     config: GlobalConfig
     models: dict[str, ModelConfig] = Field(default_factory=dict)
+    vars: dict[str, Any] = Field(default_factory=dict)
     flows: dict[str, Flow]
 
     @model_validator(mode="after")

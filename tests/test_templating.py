@@ -27,3 +27,14 @@ def test_render_env() -> None:
     )
     renderer = TemplateRenderer(build_template_context(state))
     assert renderer.render("{{ env.TELIZE_TEST_VAR }}") == "secret"
+
+
+def test_render_vars() -> None:
+    state = ExecutionState(
+        config=GlobalConfig(entrypoint="main"),
+        base_path=Path("."),
+        vars={"hosts": "192.168.0.1, 192.168.0.2", "retry": True},
+    )
+    renderer = TemplateRenderer(build_template_context(state))
+    assert renderer.render("{{ vars.hosts }}") == "192.168.0.1, 192.168.0.2"
+    assert renderer.render("retry={{ vars.retry }}") == "retry=True"

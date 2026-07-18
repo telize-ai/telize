@@ -31,10 +31,11 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 
 - **YAML workflows** — one file defines `config`, named `models`, flows, and steps
 - **Composable steps** — `input`, `chat`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
-- **Jinja templating** — wire step outputs together with `{{ steps.name.output }}`
+- **Jinja templating** — wire step outputs together with `{{ steps.name.output }}`, and reuse constants via `{{ vars.name }}`
 - **Loops and sub-flows** — add `loop` to any step to iterate it over split lists; call nested flows with `uses: flow`
 - **Validated upfront** — Pydantic models catch schema errors before any step runs
 - **Rich CLI output** — progress, step panels, and errors in the terminal
+- **Repeat runs** — optional `config.repeat` runs the full workflow N times (`0` means once)
 - **Cron scheduling** — optional `config.cron` reruns the entrypoint on a standard five-field schedule
 - **OpenAI-compatible LLMs** — official OpenAI API or local [Ollama](https://ollama.com/) via the same client
 
@@ -179,7 +180,8 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 2. The flow named in `config.entrypoint` runs first.
 3. Each step executes through a registered action (`input`, `chat`, `llm`, `shell`, …); `llm` steps resolve their `model:` profile from the top-level `models` map.
 4. Later steps can reference earlier outputs via Jinja templates.
-5. When `config.cron` is set, Telize reruns the entrypoint after each run finishes, waiting until the next scheduled time.
+5. When `config.repeat` is greater than 0, Telize reruns the full workflow that many times (`0` or omitted: once).
+6. When `config.cron` is set, Telize reruns the entrypoint after each run finishes, waiting until the next scheduled time.
 6. The CLI prints progress and results as the workflow runs.
 
 ## 📚 Workflow reference
@@ -188,8 +190,9 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 
 | Key      | Description                                                         |
 | -------- | ------------------------------------------------------------------- |
-| `config` | Global settings: `entrypoint` (which flow runs first)               |
+| `config` | Global settings: `entrypoint` (which flow runs first), optional `repeat` / `cron` |
 | `models` | Named LLM/embedding profiles; referenced by `model:` on `llm` and `text_search` steps |
+| `vars`   | Optional workflow constants; referenced in templates as `{{ vars.<name> }}` |
 | `flows`  | Named flows; `config.entrypoint` must match one of these keys       |
 
 ### ⚙️ `config`
@@ -197,7 +200,16 @@ While it is great for **structured automation**, it isn’t a silver bullet:
 | Field        | Description                                       |
 | ------------ | ------------------------------------------------- |
 | `entrypoint` | Name of the flow to run when the file is executed |
+| `repeat`     | How many times to run the full workflow. Default `0`: run once. With `repeat: 3`, the entrypoint (and any flows it reaches) runs 3 times. When `cron` is also set, each scheduled tick runs this many times (`0` still means once per tick) |
 | `cron`       | Optional cron schedule (five-field syntax, e.g. `0 * * * *` for hourly). Omitted or `null`: run once. When set, the workflow reruns on the schedule after each run finishes |
+
+Example — run the workflow three times:
+
+```yaml
+config:
+  entrypoint: main
+  repeat: 3
+```
 
 Example — run every hour:
 
@@ -246,6 +258,28 @@ models:
     model: qwen3.5:4b
     api_url: http://{{ env.OLLAMA_HOST }}:11434
 ```
+
+### 📌 `vars`
+
+Optional workflow-level constants. Values can be strings, numbers, booleans, lists, or nested maps. Reference them anywhere Jinja is supported as `{{ vars.<name> }}`.
+
+```yaml
+vars:
+  hosts: "192.168.0.1, 192.168.0.2"
+  retry: true
+
+flows:
+  main:
+    steps:
+      - name: ping_each
+        uses: shell
+        loop:
+          items: "{{ vars.hosts }}"
+          split_by: ","
+        run: ping -c 1 {{ item }}
+```
+
+Pure `{{ env.VAR }}` expressions inside `vars` are expanded at load time, same as in `models`.
 
 ### 🌊 Flow
 
@@ -318,7 +352,7 @@ Telize uses [Jinja2](https://jinja.palletsprojects.com/) in step fields.
 | When          | What you can use                                                                                           |
 | ------------- | ---------------------------------------------------------------------------------------------------------- |
 | **Load time** | `{{ env.VAR }}` — expanded when the file is parsed                                                         |
-| **Runtime**   | `{{ steps.<name>.output }}`, `{{ models.<name>.model }}`, `{{ input.<key> }}`, `{{ item }}` (inside loops) |
+| **Runtime**   | `{{ vars.<name> }}`, `{{ steps.<name>.output }}`, `{{ models.<name>.model }}`, `{{ input.<key> }}`, `{{ item }}` (inside loops) |
 
 Workflow **input** is provided when invoking Telize from the shell (`--input`, `--input-file`, `--input-stdin`) or by a parent `yaml` step's `input` map when running a nested workflow.
 
@@ -370,6 +404,7 @@ Example — chain a shell step into an LLM step:
 | [`examples/chat_input.yaml`](examples/chat_input.yaml)           | `uses: chat` — interactive user prompt → LLM             |
 | [`examples/llm_save_output.yaml`](examples/llm_save_output.yaml) | `output_to` — persist step output to disk                |
 | [`examples/llm_loop.yaml`](examples/llm_loop.yaml)               | `loop` — split output and iterate                        |
+| [`examples/vars_loop.yaml`](examples/vars_loop.yaml)             | Top-level `vars` with `{{ vars.* }}` in a loop           |
 | [`examples/call_subflow.yaml`](examples/call_subflow.yaml)       | `uses: flow` — sub-flow in the same file                 |
 | [`examples/nested_workflow.yaml`](examples/nested_workflow.yaml) | `uses: yaml` — external workflow + `input`               |
 | [`examples/python_step.yaml`](examples/python_step.yaml)         | `uses: python` — call a Python function                  |

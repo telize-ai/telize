@@ -25,6 +25,7 @@ class ExecutionState:
     config: GlobalConfig
     base_path: Path
     models: dict[str, ModelConfig] = field(default_factory=dict)
+    vars: dict[str, Any] = field(default_factory=dict)
     workflow_input: dict[str, Any] = field(default_factory=dict)
     steps: dict[str, StepResult] = field(default_factory=dict)
     loop_item: str | None = None
@@ -53,6 +54,7 @@ class ExecutionState:
             config=self.config,
             models=dict(self.models),
             base_path=self.base_path,
+            vars=dict(self.vars),
             workflow_input=dict(self.workflow_input),
             steps=dict(self.steps),
         )

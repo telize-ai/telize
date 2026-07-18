@@ -1,0 +1,21 @@
+# Declare workflow constants under `vars` and use them in Jinja templates.
+#
+# Run:
+#   telize -f examples/vars_loop.yaml
+
+config:
+  entrypoint: main
+
+vars:
+  hosts: "192.168.0.1, 192.168.0.2"
+  greeting: hello
+
+flows:
+  main:
+    steps:
+      - name: greet_each_host
+        uses: shell
+        loop:
+          items: "{{ vars.hosts }}"
+          split_by: ","
+        run: echo "{{ vars.greeting }} {{ item }}"

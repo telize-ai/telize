@@ -12,6 +12,16 @@ class GlobalConfig(BaseModel):
     entrypoint: str = Field(
         description="Name of the flow in `flows` that runs when the file is executed.",
     )
+    repeat: int = Field(
+        default=0,
+        ge=0,
+        description=(
+            "How many times to run the full workflow. Default 0: run once. "
+            "With repeat: 3, the entrypoint (and any flows it reaches) runs "
+            "3 times total. When cron is also set, each scheduled tick runs "
+            "this many times (0 still means once per tick)."
+        ),
+    )
     cron: str | None = Field(
         default=None,
         description=(

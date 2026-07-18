@@ -38,3 +38,32 @@ flows:
     assert result.output.strip() == "hello telize"
     assert result.output_path == tmp_path / "greet_output.txt"
     assert result.output_path.read_text(encoding="utf-8").strip() == "hello telize"
+
+
+def test_vars_in_loop(tmp_path: Path) -> None:
+    workflow = tmp_path / "workflow.yaml"
+    workflow.write_text(
+        """
+config:
+  entrypoint: main
+vars:
+  hosts: "alpha, beta"
+  greeting: hello
+flows:
+  main:
+    steps:
+      - name: greet_each
+        uses: shell
+        loop:
+          items: "{{ vars.hosts }}"
+          split_by: ","
+        run: echo "{{ vars.greeting }} {{ item }}"
+""",
+        encoding="utf-8",
+    )
+    spec = load_spec(workflow)
+    assert spec.vars == {"hosts": "alpha, beta", "greeting": "hello"}
+    state = WorkflowRunner(spec, workflow).run()
+    output = state.steps["greet_each"].output
+    assert "hello alpha" in output
+    assert "hello beta" in output

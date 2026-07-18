@@ -58,7 +58,7 @@ class WorkflowRunner:
         cron = self._spec.config.cron
         if cron is None:
             try:
-                return self._run_once()
+                return self._run_with_repeat()
             except KeyboardInterrupt:
                 self._observer.on_workflow_interrupted()
                 raise
@@ -66,7 +66,7 @@ class WorkflowRunner:
         state: ExecutionState | None = None
         while True:
             try:
-                state = self._run_once()
+                state = self._run_with_repeat()
                 wait = cron_wait_seconds(cron)
                 if wait > 0:
                     time.sleep(wait)
@@ -77,6 +77,16 @@ class WorkflowRunner:
                 raise
         return state  # unreachable; keeps type checkers happy
 
+    def _run_with_repeat(self) -> ExecutionState:
+        """Run the full workflow ``config.repeat`` times (0 means once)."""
+        repeat = self._spec.config.repeat
+        total = 1 if repeat == 0 else repeat
+        state: ExecutionState | None = None
+        for _ in range(total):
+            state = self._run_once()
+        assert state is not None
+        return state
+
     def _run_once(self) -> ExecutionState:
         self._step_counter = 0
         entrypoint = self._spec.config.entrypoint
@@ -86,6 +96,7 @@ class WorkflowRunner:
             config=self._spec.config,
             models=dict(self._spec.models),
             base_path=self._base_path,
+            vars=dict(self._spec.vars),
             workflow_input=dict(self._workflow_input),
         )
         self._run_flow(entrypoint, state)
