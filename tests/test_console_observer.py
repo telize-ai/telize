@@ -64,6 +64,8 @@ def test_loop_progress_updates_status_in_place() -> None:
 
 
 def test_print_output_false_skips_panel_keeps_state(tmp_path: Path) -> None:
+    import re
+
     import telize.console.terminal as terminal
 
     buffer = StringIO()
@@ -91,9 +93,10 @@ flows:
     observer = RichConsoleObserver(spec, path)
     state = WorkflowRunner(spec, path, observer=observer).run()
 
-    out = buffer.getvalue()
-    assert "collect_draft" not in out
-    assert "Draft was:" in out
+    plain = re.sub(r"\x1b\[[0-9;]*m", "", buffer.getvalue())
+    # Spinner may mention the quiet step; its result panel must not appear.
+    assert "collect_draft SHELL" not in plain
+    assert "Draft was:" in plain
     assert "Feature X ships next week." in state.steps["collect_draft"].output
     assert "Draft was: Feature X ships next week." in state.steps["echo_draft"].output
 
