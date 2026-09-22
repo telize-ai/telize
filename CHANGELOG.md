@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-22
+
 ### Added
 
 - Step-level `print_output` (default `true`); set `false` to hide the console panel while keeping `{{ steps.<name>.output }}` available
@@ -33,7 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stub flow runner with `{{ variable }}` template support between steps
 - Example `examples/hello_agent.yaml` and test suite
 
-[Unreleased]: https://github.com/telize-ai/telize/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/telize-ai/telize/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/telize-ai/telize/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/telize-ai/telize/compare/v0.3.4...v0.4.0
 [0.3.4]: https://github.com/telize-ai/telize/compare/v0.1.0...v0.3.4
 [0.1.0]: https://github.com/telize-ai/telize/releases/tag/v0.1.0
