@@ -130,6 +130,45 @@ flows:
     assert spec.flows["main"].steps[0].when == "{{ 'x' in steps.prior.output }}"
 
 
+def test_print_output_defaults_true(tmp_path: Path) -> None:
+    path = tmp_path / "workflow.yaml"
+    path.write_text(
+        """
+config:
+  entrypoint: main
+flows:
+  main:
+    steps:
+      - name: noisy
+        uses: shell
+        run: echo hello
+""",
+        encoding="utf-8",
+    )
+    spec = load_spec(path)
+    assert spec.flows["main"].steps[0].print_output is True
+
+
+def test_print_output_false_loaded(tmp_path: Path) -> None:
+    path = tmp_path / "workflow.yaml"
+    path.write_text(
+        """
+config:
+  entrypoint: main
+flows:
+  main:
+    steps:
+      - name: quiet
+        uses: shell
+        print_output: false
+        run: echo hello
+""",
+        encoding="utf-8",
+    )
+    spec = load_spec(path)
+    assert spec.flows["main"].steps[0].print_output is False
+
+
 def test_model_thinking_from_yaml(tmp_path: Path) -> None:
     path = tmp_path / "workflow.yaml"
     path.write_text(

@@ -1,0 +1,20 @@
+# Hide a step's console panel with print_output: false.
+# The output is still available to later steps via {{ steps.<name>.output }}.
+#
+# Run:
+#   telize -f examples/print_output.yaml
+
+config:
+  entrypoint: main
+
+flows:
+  main:
+    steps:
+      - name: collect_draft
+        uses: shell
+        run: echo "Feature X ships next week."
+        print_output: false
+
+      - name: echo_draft
+        uses: shell
+        run: 'echo "Draft was: {{ steps.collect_draft.output }}"'

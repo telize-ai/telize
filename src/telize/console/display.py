@@ -9,7 +9,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
-from telize.config.models import WorkflowSpec
+from telize.config.models import Step, WorkflowSpec
 from telize.console.terminal import get_console
 from telize.runtime.state import ExecutionState, StepResult
 
@@ -98,6 +98,9 @@ def print_workflow_results(
     )
 
     for index, result in enumerate(state.steps.values(), start=1):
+        step = _lookup_step(spec, result)
+        if step is not None and not step.print_output:
+            continue
         print_step_panel(result, index=index)
         console.print()
 
@@ -107,6 +110,16 @@ def print_workflow_results(
             style="dim",
         )
     )
+
+
+def _lookup_step(spec: WorkflowSpec, result: StepResult) -> Step | None:
+    flow = spec.flows.get(result.flow_name) if result.flow_name else None
+    if flow is None:
+        return None
+    for step in flow.steps:
+        if step.name == result.name:
+            return step
+    return None
 
 
 def _build_step_panel(result: StepResult, *, index: int) -> Panel:

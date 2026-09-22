@@ -33,6 +33,7 @@ Telize is a low-code framework for building agent-style pipelines: chain shell c
 - **Composable steps** — `input`, `chat`, `llm`, `shell`, `python`, `flow`, and `yaml` actions
 - **Jinja templating** — wire step outputs together with `{{ steps.name.output }}`, and reuse constants via `{{ vars.name }}`
 - **Conditional steps** — skip a step with `when: "{{ ... }}"` (Jinja boolean expression)
+- **Quiet steps** — set `print_output: false` to hide a step's console panel (templates still see the output)
 - **Loops and sub-flows** — add `loop` to any step to iterate it over split lists; call nested flows with `uses: flow`
 - **Validated upfront** — Pydantic models catch schema errors before any step runs
 - **Rich CLI output** — progress, step panels, and errors in the terminal
@@ -290,12 +291,13 @@ Pure `{{ env.VAR }}` expressions inside `vars` are expanded at load time, same a
 
 Every step also supports:
 
-| Field        | Description                                                                 |
-| ------------ | --------------------------------------------------------------------------- |
-| `name`       | Unique id within the flow; referenced as `{{ steps.<name>.output }}`        |
-| `output_to`  | Optional path (relative to the workflow file); raw step output is written when the step finishes |
-| `loop`       | Optional; run the step once per item (`items` split by `split_by`, default `\n<|separator|>\n`), exposing each as `{{ item }}` and joining outputs with `separator` (default `\n<|separator|>\n`) |
-| `when`       | Optional Jinja condition; the step runs only when it evaluates to true (e.g. `{{ 'keyword' in steps.prior.output }}`). Skipped steps record empty output and `steps.<name>.skipped` is `true`. |
+| Field          | Description                                                                 |
+| -------------- | --------------------------------------------------------------------------- |
+| `name`         | Unique id within the flow; referenced as `{{ steps.<name>.output }}`        |
+| `output_to`    | Optional path (relative to the workflow file); raw step output is written when the step finishes |
+| `loop`         | Optional; run the step once per item (`items` split by `split_by`, default `\n<|separator|>\n`), exposing each as `{{ item }}` and joining outputs with `separator` (default `\n<|separator|>\n`) |
+| `when`         | Optional Jinja condition; the step runs only when it evaluates to true (e.g. `{{ 'keyword' in steps.prior.output }}`). Skipped steps record empty output and `steps.<name>.skipped` is `true`. |
+| `print_output` | Whether to print this step's output panel to the console (default `true`). Set `false` for long or noisy output; `{{ steps.<name>.output }}` still works either way. |
 
 ### 🪜 Steps (`uses`)
 
@@ -412,6 +414,19 @@ Example — run a step only when a prior output matches:
   run: echo "also runs when hold is absent"
 ```
 
+Example — hide a step's console panel while still using its output later:
+
+```yaml
+- name: collect_draft
+  uses: shell
+  run: cat ./long_file.txt
+  print_output: false
+
+- name: summarize
+  uses: shell
+  run: 'echo "Draft length: {{ steps.collect_draft.output | length }}"'
+```
+
 ## 🧪 Examples
 
 | File                                                             | What it demonstrates                                     |
@@ -425,6 +440,7 @@ Example — run a step only when a prior output matches:
 | [`examples/llm_save_output.yaml`](examples/llm_save_output.yaml) | `output_to` — persist step output to disk                |
 | [`examples/llm_loop.yaml`](examples/llm_loop.yaml)               | `loop` — split output and iterate                        |
 | [`examples/when_condition.yaml`](examples/when_condition.yaml)   | `when` — skip steps with Jinja conditions                |
+| [`examples/print_output.yaml`](examples/print_output.yaml)       | `print_output: false` — quiet console, templates still work |
 | [`examples/vars_loop.yaml`](examples/vars_loop.yaml)             | Top-level `vars` with `{{ vars.* }}` in a loop           |
 | [`examples/call_subflow.yaml`](examples/call_subflow.yaml)       | `uses: flow` — sub-flow in the same file                 |
 | [`examples/nested_workflow.yaml`](examples/nested_workflow.yaml) | `uses: yaml` — external workflow + `input`               |

@@ -79,8 +79,9 @@ class RichConsoleObserver:
             result.flow_name = flow_name
 
         index = self._step_indices.get(f"{flow_name}:{step.name}", self._completed)
-        print_step_panel(result, index=index)
-        self._console.print()
+        if step.print_output:
+            print_step_panel(result, index=index)
+            self._console.print()
 
     def on_step_skipped(
         self, flow_name: str, step: Step, result: StepResult, *, index: int
@@ -95,8 +96,9 @@ class RichConsoleObserver:
             result.uses = step.uses
         if not result.flow_name:
             result.flow_name = flow_name
-        print_step_panel(result, index=index)
-        self._console.print()
+        if step.print_output:
+            print_step_panel(result, index=index)
+            self._console.print()
 
     def _step_status_text(
         self,

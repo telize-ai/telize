@@ -61,3 +61,40 @@ def test_loop_progress_updates_status_in_place() -> None:
 
     assert status_updates[0] == "[bold]Step 1/1[/]  loop_llm [dim](llm)[/]"
     assert status_updates[-1] == "[bold]Step 1/1[/]  loop_llm [dim](llm)[/] [dim]|[/] item 2/10"
+
+
+def test_print_output_false_skips_panel_keeps_state(tmp_path: Path) -> None:
+    import telize.console.terminal as terminal
+
+    buffer = StringIO()
+    terminal._CONSOLE = Console(file=buffer, width=120, force_terminal=True)
+
+    path = tmp_path / "workflow.yaml"
+    path.write_text(
+        """
+config:
+  entrypoint: main
+flows:
+  main:
+    steps:
+      - name: collect_draft
+        uses: shell
+        run: echo "Feature X ships next week."
+        print_output: false
+      - name: echo_draft
+        uses: shell
+        run: 'echo "Draft was: {{ steps.collect_draft.output }}"'
+""",
+        encoding="utf-8",
+    )
+    spec = load_spec(path)
+    observer = RichConsoleObserver(spec, path)
+    state = WorkflowRunner(spec, path, observer=observer).run()
+
+    out = buffer.getvalue()
+    assert "collect_draft" not in out
+    assert "Draft was:" in out
+    assert "Feature X ships next week." in state.steps["collect_draft"].output
+    assert "Draft was: Feature X ships next week." in state.steps["echo_draft"].output
+
+    terminal._CONSOLE = None

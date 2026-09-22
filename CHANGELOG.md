@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Step-level `print_output` (default `true`); set `false` to hide the console panel while keeping `{{ steps.<name>.output }}` available
+
 ## [0.4.0] - 2026-07-18
 
 ### Added

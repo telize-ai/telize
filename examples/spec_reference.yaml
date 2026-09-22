@@ -106,9 +106,11 @@ flows:
 
       # uses: shell — run commands; stdout becomes steps.<name>.output
       # Optional when: Jinja condition; false skips the step (empty output).
+      # Optional print_output: false hides the console panel (templates still work).
       - name: run_system_checks
         uses: shell
         # when: "{{ 'ship' in steps.generate_marketing_copy.output }}"
+        # print_output: false
         run: |
           echo "Starting build check..."
           python --version

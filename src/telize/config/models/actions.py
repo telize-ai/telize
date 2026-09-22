@@ -63,6 +63,14 @@ class _StepBase(BaseModel):
             "(e.g. `{{ 'keyword' in steps.prior.output }}`)."
         ),
     )
+    print_output: bool = Field(
+        default=True,
+        description=(
+            "When true (default), print this step's output panel to the console. "
+            "Set false to keep long or noisy output out of the terminal; "
+            "`{{ steps.<name>.output }}` still works either way."
+        ),
+    )
 
 
 class InputStep(_StepBase):
